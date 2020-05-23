@@ -2,6 +2,8 @@ package com.capgemini.evCharging.bean;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -12,7 +14,7 @@ public class Employee {
 	private String mailId;
 	
 	private String phoneNo;
-	@ManyToOne(cascade = CascadeType.ALL)
+	@Enumerated(EnumType.STRING)
 	private ChargerType employeeChargerType;
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Station employeeStation;

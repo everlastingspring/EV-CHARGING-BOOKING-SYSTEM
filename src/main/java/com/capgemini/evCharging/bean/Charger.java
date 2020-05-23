@@ -5,17 +5,22 @@ import java.util.Arrays;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+
 
 @Entity
 public class Charger {
 	@Id
 	private String chargerId;
+	@Enumerated(EnumType.STRING)
 	private ChargerType chargerType; 
 	private Boolean isActive; //
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Station chargerStation;
+	@Enumerated(EnumType.STRING)
 	private SlotDuration slotDuration; 
 	private Date startingDate;
 	private Date stoppingDate; //starting_Date <= stopping Date 32/13/3000

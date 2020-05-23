@@ -1,7 +1,5 @@
 package com.capgemini.evCharging.bean;
 
-import java.util.Arrays;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
