@@ -1,6 +1,6 @@
 package com.capgemini.evCharging.service;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
-import com.capgemini.evCharging.bean.ChargerInfo;
-import com.capgemini.evCharging.bean.ChargerType;
 import com.capgemini.evCharging.bean.Credential;
 import com.capgemini.evCharging.bean.Employee;
-import com.capgemini.evCharging.bean.SlotDuration;
 import com.capgemini.evCharging.bean.Station;
+import com.capgemini.evCharging.bean.enums.ChargerStatus;
+import com.capgemini.evCharging.bean.enums.ChargerType;
+import com.capgemini.evCharging.bean.enums.SlotDuration;
 import com.capgemini.evCharging.dao.AdminDao;
 import com.capgemini.evCharging.dao.BookingDao;
 import com.capgemini.evCharging.dao.ChargerDao;
@@ -92,36 +92,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return stationRepo.findAll();
 	}
 
-	@Override
-	public Date getNextAvailableChargerDate(ChargerType selectedChargerType, Station selectedChargerStation) {
-
-		return null;
-	}
-
-	@Override
-	public List<Charger> getChargers(ChargerType selectedChargerType, String stationId) throws EvChargingException {
-		try {
-			return chargerRepo.getChargers(selectedChargerType, stationId);
-		} catch (Exception exception) {
-			throw new EvChargingException(exception.getMessage());
-		}
-
-	}
-
-	@Override
-	public List<Booking> getBookedChargers(Date selectedDate, ChargerType selectedChargerType,
-			Station selectedChargerStation) {
-
-		return null;
-	}
-
-	@Override
-	public List<ChargerInfo> getChargersInfo(Date selectedDate, ChargerType selectedChargerType,
-			Station selectedChargerStation) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	@Override
 	public List<Booking> cancelBooking(String bookingId) throws EvChargingException {
 		try {
@@ -148,25 +119,40 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Charger> addCharger(Charger charger) throws EvChargingException {
-		try {
-			if (chargerRepo.findById(charger.getChargerId()).isPresent()) {
-				throw new EvChargingException("Charger already exists!");
+	public List<Charger> addChargers(String stationId, List<Charger> chargers) throws EvChargingException {
+		Optional<Station> optionalStation = stationRepo.findById(stationId);
+		if(optionalStation.isEmpty()) {
+			throw new EvChargingException("Station doesn't exist");
+		} 
+		Station chargingStation = optionalStation.get();
+		
+		for (Charger currentCharger : chargers) {
+			try {
+				if (chargerRepo.findById(currentCharger.getChargerId()).isPresent()) {
+					throw new EvChargingException("Charger already exists!");
+				}
+				
+				currentCharger.setChargerStation(chargingStation);
+				chargerRepo.save(currentCharger);
+				
+			} catch (Exception exception) {
+				throw new EvChargingException(exception.getMessage());
 			}
-			chargerRepo.save(charger);
-			return chargerRepo.findAll();
-		} catch (Exception exception) {
-			throw new EvChargingException(exception.getMessage());
 		}
+		
+		return chargerRepo.findAll();
+		
 
 	}
 
 	@Override
-	public List<Charger> removeCharger(String chargerId) throws EvChargingException {
+	public List<Charger> (String chargerId, Date removalDate) throws EvChargingException {
 		try {
 			if (chargerRepo.findById(chargerId).isEmpty()) {
 				throw new EvChargingException("Charger doesn't exist");
 			}
+			
+			
 			chargerRepo.deleteById(chargerId);
 			return chargerRepo.findAll();
 		} catch (Exception exception) {
@@ -174,6 +160,15 @@ public class EvChargingServiceImpl implements EvChargingService {
 		}
 	}
 
+	
+	public Date handleRemovalDate(String chargerId, Date removalDate) throws EvChargingException {
+		Date currentDate = new Date();
+		int result = currentDate.compareTo(removalDate);
+		if(result == 0) {
+			removeCharger(chargerId, removalDate);
+		}
+	}
+	
 	@Override
 	public Charger haltCharger(String chargerId, Date startDate, Date stopDate) throws EvChargingException {
 		try {
@@ -182,8 +177,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 				throw new EvChargingException("Charger doesn't exist");
 			}
 			Charger charger = optionalCharger.get();
-			charger.setstartingDate(startDate);
-			charger.setStoppingDate(stopDate);
+			charger.setStartingDate(startDate);
+			charger.setRemovalDate(stopDate);
 			chargerRepo.save(charger);
 			return chargerRepo.findById(chargerId).get();
 		} catch (Exception exception) {
@@ -199,7 +194,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 				throw new EvChargingException("Charger doesn't exists");
 			}
 			Charger charger = optionalCharger.get();
-			charger.setIsActive(true);
+			charger.setChargerStatus(ChargerStatus.ACTIVE);
 			chargerRepo.save(charger);
 			return chargerRepo.findById(chargerId).get();
 		} catch (Exception exception) {

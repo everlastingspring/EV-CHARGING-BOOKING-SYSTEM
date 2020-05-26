@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.capgemini.evCharging.bean.Charger;
-import com.capgemini.evCharging.bean.ChargerType;
+import com.capgemini.evCharging.bean.enums.ChargerType;
 @Repository
 public interface ChargerDao extends JpaRepository<Charger, String>{
 	

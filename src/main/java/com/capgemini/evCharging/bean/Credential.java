@@ -14,6 +14,8 @@ public class Credential {
 	private String hashedPassword; 
 	
 	private byte[] saltArray; //hashed with array
+	
+	private Boolean isAdmin;
 
 	public String getMailId() {
 		return mailId;
@@ -39,13 +41,19 @@ public class Credential {
 		this.saltArray = saltArray;
 	}
 
+	public Boolean getIsAdmin() {
+		return isAdmin;
+	}
+
+	public void setIsAdmin(Boolean isAdmin) {
+		this.isAdmin = isAdmin;
+	}
+
 	@Override
 	public String toString() {
 		return "Credential [mailId=" + mailId + ", hashedPassword=" + hashedPassword + ", saltArray="
-				+ Arrays.toString(saltArray) + "]";
+				+ Arrays.toString(saltArray) + ", isAdmin=" + isAdmin + "]";
 	}
 
-
-	
 
 }

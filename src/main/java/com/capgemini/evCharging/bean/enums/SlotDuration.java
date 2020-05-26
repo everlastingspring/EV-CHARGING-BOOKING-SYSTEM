@@ -1,4 +1,4 @@
-package com.capgemini.evCharging.bean;
+package com.capgemini.evCharging.bean.enums;
 
 public enum SlotDuration {
 	
