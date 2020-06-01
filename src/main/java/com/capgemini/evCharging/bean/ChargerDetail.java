@@ -1,13 +1,11 @@
 package com.capgemini.evCharging.bean;
 
-import java.sql.Date;
-
 import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.capgemini.evCharging.bean.enums.ChargerDetailStatus;
@@ -16,8 +14,9 @@ import com.capgemini.evCharging.bean.enums.SlotDuration;
 @Entity
 public class ChargerDetail {
 	
-	@Embedded
-	ChargerDetailId detailId;
+	
+	@Id
+	Integer detailId;
 	
 	@Enumerated(EnumType.STRING)
 	private SlotDuration chargerSlotDuration;
@@ -28,11 +27,11 @@ public class ChargerDetail {
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Employee bookedByEmployee;
 
-	public ChargerDetailId getDetailId() {
+	public Integer getDetailId() {
 		return detailId;
 	}
 
-	public void setDetailId(ChargerDetailId detailId) {
+	public void setDetailId(Integer detailId) {
 		this.detailId = detailId;
 	}
 
@@ -71,37 +70,3 @@ public class ChargerDetail {
 
 }
 
-
-@Embeddable
-class ChargerDetailId {
-	
-	private Charger charger;
-	private Date detailForDate;
-	private String detailFortime;
-	
-	public Charger getCharger() {
-		return charger;
-	}
-	public void setCharger(Charger charger) {
-		this.charger = charger;
-	}
-	public Date getDetailForDate() {
-		return detailForDate;
-	}
-	public void setDetailForDate(Date detailForDate) {
-		this.detailForDate = detailForDate;
-	}
-	public String getDetailFortime() {
-		return detailFortime;
-	}
-	public void setDetailFortime(String detailFortime) {
-		this.detailFortime = detailFortime;
-	}
-	@Override
-	public String toString() {
-		return "ChargerDetailId [charger=" + charger + ", detailForDate=" + detailForDate + ", detailFortime="
-				+ detailFortime + "]";
-	}
-	
-    
-}

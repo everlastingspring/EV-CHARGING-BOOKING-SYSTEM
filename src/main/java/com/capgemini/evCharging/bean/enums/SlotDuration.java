@@ -11,6 +11,10 @@ public enum SlotDuration {
 		this.value = value;
 	}
 	
+	public int getValue() {
+	     return value;
+	 }
+
 	
 
 }

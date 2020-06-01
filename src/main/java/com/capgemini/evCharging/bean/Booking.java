@@ -1,6 +1,6 @@
 package com.capgemini.evCharging.bean;
 
-import java.sql.Date;
+import java.util.Date;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -11,6 +11,8 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+
+import com.capgemini.evCharging.bean.enums.SlotDuration;
 
 
 
@@ -45,7 +47,7 @@ public class Booking {
 	
 	private Date bookedDate; 
 	
-	private String bookedForMins;
+	private SlotDuration bookedForMins;
 	
 	
 	public Date getBookedDate() {
@@ -78,10 +80,10 @@ public class Booking {
 	public void setBookedTiming(String bookedTiming) {
 		this.bookedTiming = bookedTiming;
 	}
-	public String getBookedForMins() {
+	public SlotDuration getBookedForMins() {
 		return bookedForMins;
 	}
-	public void setBookedForMins(String bookedForMins) {
+	public void setBookedForMins(SlotDuration bookedForMins) {
 		this.bookedForMins = bookedForMins;
 	}
 	@Override
@@ -90,6 +92,8 @@ public class Booking {
 				+ bookingByEmployee + ", bookedTiming=" + bookedTiming + ", bookedDate=" + bookedDate
 				+ ", bookedForMins=" + bookedForMins + "]";
 	}
+	
+	
 
 	
 }

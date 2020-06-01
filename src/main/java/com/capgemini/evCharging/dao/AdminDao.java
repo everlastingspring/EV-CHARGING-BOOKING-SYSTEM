@@ -12,4 +12,3 @@ public interface AdminDao extends JpaRepository<Admin, String> {
 }
 
 
-//controller -> service (dao object) -> dao-> d/b

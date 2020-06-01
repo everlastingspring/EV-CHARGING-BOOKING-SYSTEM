@@ -13,8 +13,8 @@ import com.capgemini.evCharging.bean.Booking;
 @Repository
 public interface BookingDao extends JpaRepository<Booking, String>{
 	
-	//jql
+	//hql
 	@Query("select B from Booking B where B.bookedCharger.chargerStation.stationId=:stationId and B.bookingByEmployee.mailId=:mailId")
-	public List<Booking> getBookings(@Param("stationId") String stationId,@Param("mailId") String mailId);
+	public List<Booking> getBookingsAtStationByEmployee(@Param("stationId") String stationId,@Param("mailId") String mailId);
 
 }

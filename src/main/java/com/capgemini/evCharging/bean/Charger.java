@@ -55,7 +55,6 @@ public class Charger {
 	
 	private Date startingDate;
 	
-	private Date removalDate; 
 	
 	private String[] chargerActiveTimings; //["11:00-13:00","16:00-18:00"]
 
@@ -107,14 +106,7 @@ public class Charger {
 		this.startingDate = startingDate;
 	}
 
-	public Date getRemovalDate() {
-		return removalDate;
-	}
-
-	public void setRemovalDate(Date removalDate) {
-		this.removalDate = removalDate;
-	}
-
+	
 	public String[] getChargerActiveTimings() {
 		return chargerActiveTimings;
 	}
@@ -127,8 +119,60 @@ public class Charger {
 	public String toString() {
 		return "Charger [chargerId=" + chargerId + ", chargerType=" + chargerType + ", chargerStatus=" + chargerStatus
 				+ ", chargerStation=" + chargerStation + ", slotDuration=" + slotDuration + ", startingDate="
-				+ startingDate + ", removalDate=" + removalDate + ", chargerActiveTimings="
+				+ startingDate + ", chargerActiveTimings="
 				+ Arrays.toString(chargerActiveTimings) + "]";
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(chargerActiveTimings);
+		result = prime * result + ((chargerId == null) ? 0 : chargerId.hashCode());
+		result = prime * result + ((chargerStation == null) ? 0 : chargerStation.hashCode());
+		result = prime * result + ((chargerStatus == null) ? 0 : chargerStatus.hashCode());
+		result = prime * result + ((chargerType == null) ? 0 : chargerType.hashCode());
+		result = prime * result + ((slotDuration == null) ? 0 : slotDuration.hashCode());
+		result = prime * result + ((startingDate == null) ? 0 : startingDate.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Charger other = (Charger) obj;
+		if (!Arrays.equals(chargerActiveTimings, other.chargerActiveTimings))
+			return false;
+		if (chargerId == null) {
+			if (other.chargerId != null)
+				return false;
+		} else if (!chargerId.equals(other.chargerId))
+			return false;
+		if (chargerStation == null) {
+			if (other.chargerStation != null)
+				return false;
+		} else if (!chargerStation.equals(other.chargerStation))
+			return false;
+		if (chargerStatus != other.chargerStatus)
+			return false;
+		if (chargerType != other.chargerType)
+			return false;
+		if (slotDuration != other.slotDuration)
+			return false;
+		if (startingDate == null) {
+			if (other.startingDate != null)
+				return false;
+		} else if (!startingDate.equals(other.startingDate))
+			return false;
+		return true;
+	}
+	
+	
+	
 
 }

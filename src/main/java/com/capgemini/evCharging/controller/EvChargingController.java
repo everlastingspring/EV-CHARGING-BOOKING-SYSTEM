@@ -21,7 +21,7 @@ import com.capgemini.evCharging.exception.EvChargingException;
 import com.capgemini.evCharging.service.EvChargingService;
 
 
-@CrossOrigin("http://localhost:4200")
+//@CrossOrigin("http://localhost:4200")
 @RestController
 public class EvChargingController {
 
@@ -34,15 +34,15 @@ public class EvChargingController {
 	}
 	
 	
-	@PostMapping("/add/charger")
-	public List<Charger> addNewCharger(@RequestBody Charger charger) throws EvChargingException {
-		return chargingService.addCharger(charger);
+	@PostMapping("/add/charger/{stationId}")
+	public List<Charger> addNewCharger(@PathVariable("stationID") String  stationId, @RequestBody List<Charger> chargers) throws EvChargingException {
+		return chargingService.addChargers(stationId, chargers);
 	}
 	
-	@DeleteMapping("/remove/charger/{chargerId}")
-	public List<Charger> removeCharger(@PathVariable String chargerId) throws EvChargingException {
-		return chargingService.removeCharger(chargerId);
-	}
+//	@DeleteMapping("/remove/charger/{chargerId}")
+//	public List<Charger> removeCharger(@PathVariable String chargerId) throws EvChargingException {
+//		return chargingService.removeCharger(chargerId, removalDate)
+//	}
 	
 	@GetMapping("/login/{email}/{password}")
 	public Boolean loginUser(@PathVariable String email, @PathVariable String password)throws EvChargingException {

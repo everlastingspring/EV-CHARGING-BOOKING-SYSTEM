@@ -17,6 +17,9 @@ public interface ChargerDao extends JpaRepository<Charger, String>{
 	
 
 	@Query("select C from Charger C where C.chargerType=:selectedChargerType and C.chargerStation.stationId=:stationId")
-	public List<Charger> getChargers(@Param("selectedChargerType") ChargerType selectedChargerType,@Param("stationId") String stationId);
+	public List<Charger> getChargersOfStationAndType(@Param("selectedChargerType") ChargerType selectedChargerType,@Param("stationId") String stationId);
+	
+	@Query("select C from Charger C where C.chargerStation.stationId=:stationId")
+	public List<Charger> getChargersOfStation(String stationId);
 	
 }

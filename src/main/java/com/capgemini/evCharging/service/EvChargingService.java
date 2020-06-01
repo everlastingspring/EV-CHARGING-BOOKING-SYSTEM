@@ -1,6 +1,6 @@
 package com.capgemini.evCharging.service;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 
 import com.capgemini.evCharging.bean.Admin;
@@ -27,14 +27,14 @@ public interface EvChargingService {
 	//User Registration drop down
 	public List<Station> getChargingStations();
 	
-	public List<Charger> getChargersOfStation(String stationId);
+	public List<Charger> getChargersOfStation(String stationId) throws EvChargingException;
 	
-	public List<Charger> getChargersOfStation(String stationId, ChargerType chargerType); // more filtered -> Admin Actions
+	public List<Charger> getChargersOfStationAndType(String stationId, ChargerType chargerType) throws EvChargingException; // more filtered -> Admin Actions
 	
 	//User booking 
 	public Date getNextAvailableBookingDate(ChargerType selectedChargerType, String selectedStationId);
 	
-	public List<ChargerDetail> getChargerDetailListForType(Date forDate, ChargerType selectedChargerType, String selectedStationId);
+	public List<ChargerDetail> getChargerDetailListForType(Date forDate, ChargerType selectedChargerType, String selectedStationId) throws EvChargingException;
 	
 	public Booking bookCharger(Date bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException;
 
@@ -45,7 +45,7 @@ public interface EvChargingService {
 	
 	//Admin Actions
 	
-	public List<ChargerDetail> getChargerDetailListForSlot(String stationId, Date forDate, SlotDuration duration);
+	public List<ChargerDetail> getChargerDetailListForSlot(Date forDate, SlotDuration duration, String stationId) throws EvChargingException;
 	
 	//Use getChargerDetailListForType
 	

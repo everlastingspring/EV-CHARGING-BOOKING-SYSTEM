@@ -31,6 +31,8 @@ public class Station {
 	private String stationId;
 	private String city;
 	private String campusLocation;
+	
+	
 	public String getStationId() {
 		return stationId;
 	}
@@ -53,6 +55,46 @@ public class Station {
 	public String toString() {
 		return "Station [stationId=" + stationId + ", city=" + city + ", campusLocation=" + campusLocation + "]";
 	}
+	
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((campusLocation == null) ? 0 : campusLocation.hashCode());
+		result = prime * result + ((city == null) ? 0 : city.hashCode());
+		result = prime * result + ((stationId == null) ? 0 : stationId.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Station other = (Station) obj;
+		if (campusLocation == null) {
+			if (other.campusLocation != null)
+				return false;
+		} else if (!campusLocation.equals(other.campusLocation))
+			return false;
+		if (city == null) {
+			if (other.city != null)
+				return false;
+		} else if (!city.equals(other.city))
+			return false;
+		if (stationId == null) {
+			if (other.stationId != null)
+				return false;
+		} else if (!stationId.equals(other.stationId))
+			return false;
+		return true;
+	}
+	
+	
+	
 	
 
 }
