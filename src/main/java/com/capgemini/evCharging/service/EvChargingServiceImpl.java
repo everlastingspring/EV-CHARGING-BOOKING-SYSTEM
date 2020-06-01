@@ -336,7 +336,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 						  }
 						  
 						  ChargerDetail chargerDetail = new ChargerDetail();
-						  chargerDetail.setDetailId(detailId.hashCode());
+						  chargerDetail.setDetailId(detailId);
 						  chargerDetail.setChargerDetailStatus(ChargerDetailStatus.FREE);
 						  chargerDetail.setBookedByEmployee(null);
 						  chargerDetail.setChargerSlotDuration(charger.getSlotDuration());

@@ -3,14 +3,18 @@ package com.capgemini.evCharging.bean;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
-@Embeddable
+
+
 public class ChargerDetailId implements Serializable{
 	
-
+	private static final long serialVersionUID = 1L;
+	
+	@ManyToOne
+    @JoinColumn(name = "chargerId")
 	private Charger charger;
 	private Date detailForDate;
 	private String detailFortime;

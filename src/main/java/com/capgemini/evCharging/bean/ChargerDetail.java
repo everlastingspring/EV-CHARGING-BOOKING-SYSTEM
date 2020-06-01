@@ -5,7 +5,6 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.capgemini.evCharging.bean.enums.ChargerDetailStatus;
@@ -14,9 +13,9 @@ import com.capgemini.evCharging.bean.enums.SlotDuration;
 @Entity
 public class ChargerDetail {
 	
-	
-	@Id
-	Integer detailId;
+
+	@EmbeddedId
+	ChargerDetailId detailId;
 	
 	@Enumerated(EnumType.STRING)
 	private SlotDuration chargerSlotDuration;
@@ -27,11 +26,13 @@ public class ChargerDetail {
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Employee bookedByEmployee;
 
-	public Integer getDetailId() {
+	
+
+	public ChargerDetailId getDetailId() {
 		return detailId;
 	}
 
-	public void setDetailId(Integer detailId) {
+	public void setDetailId(ChargerDetailId detailId) {
 		this.detailId = detailId;
 	}
 
@@ -61,9 +62,11 @@ public class ChargerDetail {
 
 	@Override
 	public String toString() {
-		return "ChargerDetails [detailId=" + detailId + ", chargerSlotDuration=" + chargerSlotDuration
+		return "ChargerDetail [detailId=" + detailId + ", chargerSlotDuration=" + chargerSlotDuration
 				+ ", chargerDetailStatus=" + chargerDetailStatus + ", bookedByEmployee=" + bookedByEmployee + "]";
 	}
+
+	
 	
 	
 	
