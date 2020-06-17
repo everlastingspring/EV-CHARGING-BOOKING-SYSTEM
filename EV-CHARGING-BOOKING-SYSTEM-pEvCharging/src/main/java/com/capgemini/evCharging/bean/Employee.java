@@ -46,4 +46,6 @@ public class Employee {
 	private String campus;
 	
 	private String city;
+	
+	@Transient private String password;
 }
