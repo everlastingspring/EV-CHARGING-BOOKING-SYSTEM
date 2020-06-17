@@ -11,7 +11,7 @@ public class Credential {
 	
 	@Id
 	private String mailId;
-	
+	@ColumnDefault(value = "false")
 	private Boolean isAdmin;
 	
 	private String password; 
