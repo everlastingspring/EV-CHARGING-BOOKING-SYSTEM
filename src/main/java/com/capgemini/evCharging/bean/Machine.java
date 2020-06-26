@@ -1,7 +1,7 @@
 package com.capgemini.evCharging.bean;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.sql.Date;
 import java.time.LocalTime;
 
 import javax.persistence.CascadeType;

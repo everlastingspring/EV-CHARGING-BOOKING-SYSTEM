@@ -1,6 +1,9 @@
 package com.capgemini.evCharging.service;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +23,10 @@ import com.capgemini.evCharging.dao.StationDao;
 import com.capgemini.evCharging.exception.EvChargingException;
 
 public class Utility {
-	
-	
+
+
 	public static final Utility utilityObject = new Utility();
-	
+
 	public Employee getEmployeeFromMailId(String mailId, EmployeeDao employeeRepo) throws EvChargingException {
 		Optional<Employee> optionalEmployeeObj = employeeRepo.findByMailId(mailId);
 		if(optionalEmployeeObj.isEmpty()) {
@@ -31,7 +34,7 @@ public class Utility {
 		} 
 		return optionalEmployeeObj.get();
 	}
-	
+
 	public Credential getCredentialFromMailId(String mailId, CredentialDao credentialRepo) throws EvChargingException {
 		Optional<Credential> optionalCredentialObj = credentialRepo.findByMailId(mailId);
 		if(optionalCredentialObj.isEmpty()) {
@@ -39,7 +42,7 @@ public class Utility {
 		} 
 		return optionalCredentialObj.get();
 	}
-	
+
 	public Machine getMachineFromMachineId(Integer machineId, MachineDao machineRepo) throws EvChargingException {
 		Optional<Machine> optionalMachine = machineRepo.findById(machineId);
 		if(optionalMachine.isEmpty()) {
@@ -66,22 +69,22 @@ public class Utility {
 		return optionalStation.get();
 	}
 
-	
+
 	public MachineDetails populateMachineDetails(MachineDetails machineDetails, List<Machine> machines) {
 
 		for(Machine machine : machines) {
-			
+
 			LocalTime time = machine.getStartTime();
-	
+
 			for(; time.isBefore(machine.getEndTime());time.plusMinutes(machine.getSlotDuration().getValue())) {
 				MachineDetailKey key = new MachineDetailKey(time,time.plusMinutes(machine.getSlotDuration().getValue()));
-				
-//				if(!detailDictionary.containsKey(key)) {
-//					detailDictionary.put(key, new ArrayList<MachineDetailValue>());
-//				}
+
+				//				if(!detailDictionary.containsKey(key)) {
+				//					detailDictionary.put(key, new ArrayList<MachineDetailValue>());
+				//				}
 				MachineDetailValue valueElement = new MachineDetailValue(machine.getMachineId());
 				machineDetails.getMachineDetails().get(key).add(valueElement);
-				
+
 			}
 		}
 		return machineDetails;

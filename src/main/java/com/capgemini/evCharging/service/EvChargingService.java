@@ -1,7 +1,7 @@
 package com.capgemini.evCharging.service;
 
 import java.time.LocalTime;
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 
 import com.capgemini.evCharging.bean.Booking;
@@ -26,19 +26,19 @@ public interface EvChargingService {
 	
 	//Employee actions
 	
-	public Date getNextAvailableBookingDate(MachineType selectedMachineType, String selectedStationId);
+	public Date getNextAvailableBookingDate(MachineType selectedMachineType, Integer selectedStationId) throws EvChargingException;
 	
 	public MachineDetails getMachineBookingDetail(Date selectedDate, MachineType selectedMachineType, Integer stationId) throws EvChargingException;
 	
-	public Booking bookMachine(Date bookedDate, LocalTime bookedTiming, Integer machineId, Integer employeeId) throws EvChargingException;
+	public List<Booking> bookMachine(Date bookedDate, LocalTime bookedTiming, Integer machineId, Integer employeeId) throws EvChargingException;
 
-	public List<Booking> getAllEmployeeBookings(Integer stationId, Integer employeeId) throws EvChargingException;
+	public List<Booking> getEmployeeAllBookings(Integer employeeId) throws EvChargingException;
 	
-	public List<Booking> getEmployeeCurrentBookings(Integer stationId, Integer employeeId) throws EvChargingException;
+	public List<Booking> getEmployeeCurrentBookings(Integer employeeId) throws EvChargingException;
 	
 	public List<Booking> cancelBooking(Integer ticketNo) throws EvChargingException;
 	
-	public List<Booking> rescheduleBooking(Integer ticketNo) throws EvChargingException;
+	public List<Booking> rescheduleBooking(Integer ticketNo,Date bookedDate, LocalTime bookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException;
 	
 	
 	// Admin actions
@@ -57,12 +57,13 @@ public interface EvChargingService {
 	
 	public Machine modifyMachine(Machine modifiedMachine) throws EvChargingException;
 	
-	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, Integer stationId);
+	public List<Booking> generateBookingsReport(Integer stationId,Date fromDate, Date toDate);
 	
-	public List<Booking> getBookingsDetail(Integer machineId,Date fromDate, Date toDate);
+	public List<Booking> generateMachineBookingsReport(Integer machineId,Date fromDate, Date toDate);
 	
 	
-	
+	//Admin actions -> Not in presentation
+	public List<Station> addStation(String city,String campusLocation);
 	
 	
 	//select count(*),Machine.MachineId, Machine.station.location from Booking where bookingDate >= startingDate and bookingDate <= stoppingDate groupBy Machine.MachineId;

@@ -1,8 +1,9 @@
 package com.capgemini.evCharging.service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Date;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -109,17 +110,48 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 
+	public Integer getPossibleNumberOfBookings(MachineType selectedMachineType, Integer stationId,Date selectedDate) {
+		
+		List<Machine> machines = getActiveMachinesOfTypeAndStation(selectedMachineType, stationId, selectedDate);
+		Integer possibleBookings = 0;
+		for(Machine machine: machines) {
+			
+			
+			possibleBookings += ((machine.getEndTime().getMinute()  - machine.getStartTime().getMinute()) / machine.getSlotDuration().getValue());
+		}
+		return possibleBookings;
+	}
 
 	@Override
-	public Date getNextAvailableBookingDate(MachineType selectedMachineType, String selectedStationId) {
-		// Deals with MachineDetails table.
-
-		return new Date();
+	public Date getNextAvailableBookingDate(MachineType selectedMachineType, Integer selectedStationId) throws EvChargingException {
+		
+		LocalDate currentDate = LocalDate.now();
+		LocalDate selectedDate;
+		Date sqlFormattedDate = new Date(System.currentTimeMillis());
+		Boolean isFound = false;
+		
+		for(selectedDate = currentDate; !isFound ; selectedDate.plusDays(1)) {
+			sqlFormattedDate = Date.valueOf(selectedDate);
+			String quotedDate = "\'" + sqlFormattedDate + "\'";
+			Integer currentBookings =  bookingRepo.getBookingsAtStationOnDateWithType(selectedStationId, quotedDate, selectedMachineType);
+			Integer possibleBookings = getPossibleNumberOfBookings(selectedMachineType, selectedStationId, sqlFormattedDate);
+			if(currentBookings < possibleBookings) {
+				isFound = true;
+				
+			} else if(currentBookings > possibleBookings) {
+				throw new EvChargingException("Current Active Bookings " + currentBookings + " at "+ selectedStationId + " station with selected machine type "+ selectedMachineType + " on " + quotedDate + "can't be greater than possible bookings" + possibleBookings);
+			} 
+			
+			
+		}
+		
+		return sqlFormattedDate;
+		
 	}
 
 
 
-	public List<Machine> getMachinesOfTypeAndStation(MachineType selectedMachineType, Integer stationId,Date selectedDate) {
+	public List<Machine> getActiveMachinesOfTypeAndStation(MachineType selectedMachineType, Integer stationId,Date selectedDate) {
 
 		String quotedDate = "\'" +  selectedDate.toString() + "\'";
 		//select * from machine where machine.machineType = 'Level1' and machine.stationId = stationId and machine.duration = duration and machine.machine_status = 'Active' and machine.staring_date <= currentDate;
@@ -156,7 +188,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 	@Override
 	public MachineDetails getMachineBookingDetail(Date selectedDate, MachineType selectedMachineType, Integer stationId) throws EvChargingException {
 
-		List<Machine> machines =  getMachinesOfTypeAndStation(selectedMachineType,stationId,selectedDate);
+		List<Machine> machines =  getActiveMachinesOfTypeAndStation(selectedMachineType,stationId,selectedDate);
 		MachineDetails machineDetails = new MachineDetails();
 		machineDetails =  Utility.utilityObject.populateMachineDetails(machineDetails,machines);
 
@@ -177,8 +209,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 
 
-
-	public Booking bookMachine(Date bookedDate, LocalTime bookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException {
+	@Override
+	public List<Booking> bookMachine(Date bookedDate, LocalTime bookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException {
 
 		
 		Machine bookedMachine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
@@ -196,34 +228,34 @@ public class EvChargingServiceImpl implements EvChargingService {
 		booking.setBookingByEmployee(optionalBookedByEmployee.get());
 		bookingRepo.save(booking);
 
-		return booking;
+		return bookingRepo.findAll();
 
 
 	}
 
 	@Override
-	public List<Booking> getAllEmployeeBookings(Integer stationId, Integer employeeId) throws EvChargingException {
-		List<Booking> bookings = bookingRepo.getAllBookingsAtStationByEmployee(stationId,employeeId);
+	public List<Booking> getEmployeeAllBookings(Integer employeeId) throws EvChargingException {
+		List<Booking> bookings = bookingRepo.getAllBookingsByEmployee(employeeId);
 
 		if(bookings.isEmpty()) {
-			throw new EvChargingException("User with" + employeeId + " no booking found at" + stationId);
+			throw new EvChargingException("User with" + employeeId + " no booking");
 		}
 
 		return bookings;
 	}
 	
 	@Override
-	public List<Booking> getEmployeeCurrentBookings(Integer stationId, Integer employeeId) throws EvChargingException {
+	public List<Booking> getEmployeeCurrentBookings(Integer employeeId) throws EvChargingException {
 		
-			Date currentDate = new Date();
+			Date currentDate = new Date(System.currentTimeMillis());
 			String quotedDate = "\'" +  currentDate.toString() + "\'";
 			LocalTime currentTime = LocalTime.now();
 			String quotedTime = "\'" + currentTime.toString() + "\'"; 
 		
-			List<Booking> bookings = bookingRepo.getCurrentBookingsAtStationByEmployee(stationId, employeeId, quotedDate, quotedTime);
+			List<Booking> bookings = bookingRepo.getCurrentBookingsByEmployee(employeeId, quotedDate, quotedTime);
 
 			if(bookings.isEmpty()) {
-				throw new EvChargingException("User with" + employeeId + " no current booking found at" + stationId);
+				throw new EvChargingException("User with" + employeeId + " no current booking");
 			}
 
 			return bookings;
@@ -231,12 +263,14 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 	
 	@Override
-	public List<Booking> rescheduleBooking(Integer ticketNo) throws EvChargingException {
+	public List<Booking> rescheduleBooking(Integer ticketNo, Date rescheduledBookedDate, LocalTime rescheduledBookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException {
 		Booking booking = Utility.utilityObject.getBookingFromTicketNo(ticketNo,bookingRepo);
 
 		booking.setStatus(BookingStatus.RESCHEDULED);
 
+		bookMachine(rescheduledBookedDate, rescheduledBookingStartTiming, machineId, employeeId);
 		bookingRepo.save(booking);
+		
 		return bookingRepo.findAll();
 	}
 
@@ -334,18 +368,35 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, Integer stationId) {
+	public List<Booking> generateBookingsReport(Integer stationId,Date fromDate, Date toDate) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Booking> getBookingsDetail(Integer machineId,Date fromDate, Date toDate) {
+	public List<Booking> generateMachineBookingsReport(Integer machineId,Date fromDate, Date toDate) {
 		
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	
+	
+	
+	//Non UI Methods
+	@Override
+	public List<Station> addStation(String city, String campusLocation) {
+		Station newStation = new Station();
+		newStation.setCity(city);
+		newStation.setCampusLocation(campusLocation);
+		stationRepo.save(newStation);
+		
+		return stationRepo.findAll();
+	}
+
+	
+	
+	
 	
 
 
