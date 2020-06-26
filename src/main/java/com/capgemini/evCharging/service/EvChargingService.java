@@ -1,71 +1,69 @@
 package com.capgemini.evCharging.service;
 
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 
-import com.capgemini.evCharging.bean.Admin;
 import com.capgemini.evCharging.bean.Booking;
-import com.capgemini.evCharging.bean.Charger;
-import com.capgemini.evCharging.bean.ChargerDetail;
 import com.capgemini.evCharging.bean.Employee;
+import com.capgemini.evCharging.bean.Machine;
+import com.capgemini.evCharging.bean.MachineDetails;
 import com.capgemini.evCharging.bean.Station;
-import com.capgemini.evCharging.bean.enums.ChargerType;
+import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
 import com.capgemini.evCharging.exception.EvChargingException;
 
 public interface EvChargingService {
 	
-	//Authenticate  
-	public Boolean areCredentialsMatched(String mailId,String password) throws EvChargingException ;
+	//Registration and login
+	public Boolean areCredentialsMatched(String mailId,String password) throws EvChargingException ; 
 	
-	public Boolean registerEmployee(Employee emp, String password) throws EvChargingException;
-	
-	public Boolean registerAdmin(Admin admin, String password) throws EvChargingException;
-	
-	
-	
-	//User Registration drop down
-	public List<Station> getChargingStations();
-	
-	public List<Charger> getChargersOfStation(String stationId) throws EvChargingException;
-	
-	public List<Charger> getChargersOfStationAndType(String stationId, ChargerType chargerType) throws EvChargingException; // more filtered -> Admin Actions
-	
-	//User booking 
-	public Date getNextAvailableBookingDate(ChargerType selectedChargerType, String selectedStationId);
-	
-	public List<ChargerDetail> getChargerDetailListForType(Date forDate, ChargerType selectedChargerType, String selectedStationId) throws EvChargingException;
-	
-	public Booking bookCharger(Date bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException;
+	public Boolean registerEmployee(Employee emp, String password,Boolean isAdmin) throws EvChargingException;
 
-	public List<Booking> getBookings(String stationId, String mailId) throws EvChargingException;
-	
-	public List<Booking> cancelBooking(String ticketNo) throws EvChargingException;
-	
-	
-	//Admin Actions
-	
-	public List<ChargerDetail> getChargerDetailListForSlot(Date forDate, SlotDuration duration, String stationId) throws EvChargingException;
-	
-	//Use getChargerDetailListForType
-	
-	public List<Charger> addChargers(String stationId, List<Charger> chargers) throws EvChargingException;
-	
-	public List<Charger> removeCharger(String chargerId, Date removalDate) throws EvChargingException;
-	
-	public Charger haltCharger(String chargerId, Date newStartDate) throws EvChargingException; // for normal maintenance startDate += startDate 
-	
-	public Charger resumeCharger(String chargerId) throws EvChargingException;
-	
-	public List<Charger> modifyCharger(String chargerId,SlotDuration newDuration, String[] newChargerActiveTimimgs) throws EvChargingException;
-	
-	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, String stationId);
-	
-	public List<Booking> getBookingsDetail(String chargerId,Date fromDate, Date toDate);
+	public List<Station> getStations();
 	
 	
 	
+	//Employee actions
+	
+	public Date getNextAvailableBookingDate(MachineType selectedMachineType, String selectedStationId);
+	
+	public MachineDetails getMachineBookingDetail(Date selectedDate, MachineType selectedMachineType, Integer stationId) throws EvChargingException;
+	
+	public Booking bookMachine(Date bookedDate, LocalTime bookedTiming, Integer machineId, Integer employeeId) throws EvChargingException;
+
+	public List<Booking> getAllEmployeeBookings(Integer stationId, Integer employeeId) throws EvChargingException;
+	
+	public List<Booking> getEmployeeCurrentBookings(Integer stationId, Integer employeeId) throws EvChargingException;
+	
+	public List<Booking> cancelBooking(Integer ticketNo) throws EvChargingException;
+	
+	public List<Booking> rescheduleBooking(Integer ticketNo) throws EvChargingException;
 	
 	
-	//select count(*),charger.chargerId, charger.station.location from Booking where bookingDate >= startingDate and bookingDate <= stoppingDate groupBy charger.chargerId;
+	// Admin actions
+	
+	public MachineDetails getMachineBookingDetail(Date selectedDate, SlotDuration selectedDuration, Integer stationId) throws EvChargingException;
+	
+	public List<Machine> addMachines(Integer stationId, List<Machine> machines) throws EvChargingException;
+	
+	public List<Machine> removeMachine(Integer machineId) throws EvChargingException;
+	
+	public Machine haltMachine(Integer machineId, Date newStartDate, LocalTime newStartTime, LocalTime newEndTime) throws EvChargingException; // for normal maintenance startDate += startDate 
+	
+	public Machine haltMachine(Integer machineId, Date newStartDate) throws EvChargingException; // for normal maintenance startDate += startDate 
+	
+	public Machine resumeMachine(Integer machineId) throws EvChargingException;
+	
+	public Machine modifyMachine(Machine modifiedMachine) throws EvChargingException;
+	
+	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, Integer stationId);
+	
+	public List<Booking> getBookingsDetail(Integer machineId,Date fromDate, Date toDate);
+	
+	
+	
+	
+	
+	//select count(*),Machine.MachineId, Machine.station.location from Booking where bookingDate >= startingDate and bookingDate <= stoppingDate groupBy Machine.MachineId;
 }

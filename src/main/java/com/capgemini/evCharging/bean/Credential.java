@@ -2,6 +2,7 @@ package com.capgemini.evCharging.bean;
 
 import java.util.Arrays;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -9,6 +10,9 @@ import javax.persistence.Id;
 public class Credential {
 	
 	@Id
+	private Integer employeeId;
+	
+	@Column(unique = true)
 	private String mailId;
 	
 	private String hashedPassword; 
@@ -17,12 +21,12 @@ public class Credential {
 	
 	private Boolean isAdmin;
 
-	public String getMailId() {
-		return mailId;
+	public Integer getEmployeeId() {
+		return employeeId;
 	}
 
-	public void setMailId(String mailId) {
-		this.mailId = mailId;
+	public void setEmployeeId(Integer employeeId) {
+		this.employeeId = employeeId;
 	}
 
 	public String getHashedPassword() {
@@ -49,11 +53,23 @@ public class Credential {
 		this.isAdmin = isAdmin;
 	}
 
+	public String getMailId() {
+		return mailId;
+	}
+
+	public void setMailId(String mailId) {
+		this.mailId = mailId;
+	}
+
 	@Override
 	public String toString() {
-		return "Credential [mailId=" + mailId + ", hashedPassword=" + hashedPassword + ", saltArray="
-				+ Arrays.toString(saltArray) + ", isAdmin=" + isAdmin + "]";
+		return "Credential [employeeId=" + employeeId + ", mailId=" + mailId + ", hashedPassword=" + hashedPassword
+				+ ", saltArray=" + Arrays.toString(saltArray) + ", isAdmin=" + isAdmin + "]";
 	}
+
+	
+
+	
 
 
 }

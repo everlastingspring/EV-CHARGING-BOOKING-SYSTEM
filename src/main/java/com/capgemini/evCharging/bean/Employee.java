@@ -1,6 +1,7 @@
 package com.capgemini.evCharging.bean;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -8,81 +9,87 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
-import com.capgemini.evCharging.bean.enums.ChargerType;
+import com.capgemini.evCharging.bean.enums.MachineType;
+import com.sun.istack.NotNull;
 
 @Entity
 public class Employee {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "employee_seq")
+	private Integer employeeId;
 
-	@GenericGenerator(
-
-			name = "employee_seq",
-
-			strategy = "com.capgemini.evCharging.bean.StringPrefixedSequenceIdGenerator",
-
-			parameters = {
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "1"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.VALUE_PREFIX_PARAMETER, value = "E_"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
+	@Column(unique = true)
 	private String mailId;
-	
+
 	private String empName;
 	
+
 	private String phoneNo;
 	
 	@Enumerated(EnumType.STRING)
-	private ChargerType employeeChargerType;
+	private MachineType employeeMachineType;
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Station employeeStation;
-	
+
+	public Integer getEmployeeId() {
+		return employeeId;
+	}
+
+	public void setEmployeeId(Integer employeeId) {
+		this.employeeId = employeeId;
+	}
+
 	public String getMailId() {
 		return mailId;
 	}
+
 	public void setMailId(String mailId) {
 		this.mailId = mailId;
 	}
-	
-	public String getPhoneNo() {
-		return phoneNo;
-	}
-	public void setPhoneNo(String phoneNo) {
-		this.phoneNo = phoneNo;
-	}
-	public ChargerType getEmployeeChargerType() {
-		return employeeChargerType;
-	}
-	public void setEmployeeChargerType(ChargerType employeeChargerType) {
-		this.employeeChargerType = employeeChargerType;
-	}
-	public Station getEmployeeStation() {
-		return employeeStation;
-	}
-	public void setEmployeeStation(Station employeeStation) {
-		this.employeeStation = employeeStation;
-	}
+
 	public String getEmpName() {
 		return empName;
 	}
+
 	public void setEmpName(String empName) {
 		this.empName = empName;
 	}
+
+	public String getPhoneNo() {
+		return phoneNo;
+	}
+
+	public void setPhoneNo(String phoneNo) {
+		this.phoneNo = phoneNo;
+	}
+
+	public MachineType getEmployeeMachineType() {
+		return employeeMachineType;
+	}
+
+	public void setEmployeeMachineType(MachineType employeeMachineType) {
+		this.employeeMachineType = employeeMachineType;
+	}
+
+	public Station getEmployeeStation() {
+		return employeeStation;
+	}
+
+	public void setEmployeeStation(Station employeeStation) {
+		this.employeeStation = employeeStation;
+	}
+
 	@Override
 	public String toString() {
-		return "Employee [mailId=" + mailId + ", empName=" + empName + ", phoneNo=" + phoneNo + ", employeeChargerType="
-				+ employeeChargerType + ", employeeStation=" + employeeStation + "]";
+		return "Employee [employeeId=" + employeeId + ", mailId=" + mailId + ", empName=" + empName + ", phoneNo="
+				+ phoneNo + ", employeeMachineType=" + employeeMachineType + ", employeeStation=" + employeeStation
+				+ "]";
 	}
-	
-	
-	
 
 }

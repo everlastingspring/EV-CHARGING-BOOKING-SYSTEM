@@ -13,30 +13,15 @@ import org.hibernate.annotations.Parameter;
 public class Station {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "station_seq")
-
-	@GenericGenerator(
-
-			name = "station_seq",
-
-			strategy = "com.capgemini.evCharging.bean.StringPrefixedSequenceIdGenerator",
-
-			parameters = {
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "1"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.VALUE_PREFIX_PARAMETER, value = "ST_"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
-	private String stationId;
+	private Integer stationId;
 	private String city;
 	private String campusLocation;
 	
 	
-	public String getStationId() {
+	public Integer getStationId() {
 		return stationId;
 	}
-	public void setStationId(String stationId) {
+	public void setStationId(Integer stationId) {
 		this.stationId = stationId;
 	}
 	public String getCity() {

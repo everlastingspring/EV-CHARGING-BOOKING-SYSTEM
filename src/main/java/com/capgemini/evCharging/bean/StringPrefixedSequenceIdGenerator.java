@@ -38,5 +38,3 @@ public class StringPrefixedSequenceIdGenerator extends SequenceStyleGenerator {
 
 }
 
-//"Ad001", "Ad02" 
-//EMP

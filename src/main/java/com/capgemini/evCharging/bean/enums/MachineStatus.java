@@ -1,6 +1,6 @@
 package com.capgemini.evCharging.bean.enums;
 
-public enum ChargerStatus {
+public enum MachineStatus {
 	
 	HALTED, ACTIVE;
 

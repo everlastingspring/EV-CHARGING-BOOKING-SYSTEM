@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.capgemini.evCharging.bean.Charger;
+import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.Employee;
 import com.capgemini.evCharging.exception.EvChargingException;
 import com.capgemini.evCharging.service.EvChargingService;
@@ -28,20 +28,20 @@ public class EvChargingController {
 	@Autowired
 	EvChargingService chargingService;
 	
-	@PostMapping("/register/employee/{password}")
-	public Boolean registerEmployee(@RequestBody Employee employee, @PathVariable("password") String password) throws EvChargingException   {
-		return chargingService.registerEmployee(employee, password);
+	@PostMapping("/register/employee/{password}/{isAdmin}")
+	public Boolean registerEmployee(@RequestBody Employee employee, @PathVariable("password") String password, @PathVariable("isAdmin") Boolean isAdmin) throws EvChargingException   {
+		return chargingService.registerEmployee(employee, password,isAdmin);
 	}
 	
 	
-	@PostMapping("/add/charger/{stationId}")
-	public List<Charger> addNewCharger(@PathVariable("stationID") String  stationId, @RequestBody List<Charger> chargers) throws EvChargingException {
-		return chargingService.addChargers(stationId, chargers);
+	@PostMapping("/add/Machine/{stationId}")
+	public List<Machine> addNewMachine(@PathVariable("stationID") Integer  stationId, @RequestBody List<Machine> machines) throws EvChargingException {
+		return chargingService.addMachines(stationId, machines);
 	}
 	
-//	@DeleteMapping("/remove/charger/{chargerId}")
-//	public List<Charger> removeCharger(@PathVariable String chargerId) throws EvChargingException {
-//		return chargingService.removeCharger(chargerId, removalDate)
+//	@DeleteMapping("/remove/Machine/{MachineId}")
+//	public List<Machine> removeMachine(@PathVariable String MachineId) throws EvChargingException {
+//		return chargingService.removeMachine(MachineId, removalDate)
 //	}
 	
 	@GetMapping("/login/{email}/{password}")

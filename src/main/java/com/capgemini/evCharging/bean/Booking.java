@@ -1,9 +1,12 @@
 package com.capgemini.evCharging.bean;
 
+import java.time.LocalTime;
 import java.util.Date;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,6 +15,7 @@ import javax.persistence.ManyToOne;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
+import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
 
 
@@ -20,53 +24,33 @@ import com.capgemini.evCharging.bean.enums.SlotDuration;
 public class Booking {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "booking_seq")
-
-	@GenericGenerator(
-
-			name = "booking_seq",
-
-			strategy = "com.capgemini.evCharging.bean.StringPrefixedSequenceIdGenerator",
-
-			parameters = {
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "1"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.VALUE_PREFIX_PARAMETER, value = "BO_"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
-	private String ticketNo;
+	private Integer ticketNo;
 	
 	@ManyToOne(cascade = CascadeType.ALL)
-	private Charger bookedCharger;
+	private Machine bookedMachine;
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Employee bookingByEmployee;
 	
-	private String bookedTiming; //"12:00"
-	
 	private Date bookedDate; 
 	
-	private SlotDuration bookedForMins;
+	private LocalTime bookingStartTime;
+	private LocalTime bookingEndTime;
 	
+	@Enumerated(EnumType.STRING)
+	private BookingStatus status;
 	
-	public Date getBookedDate() {
-		return bookedDate;
-	}
-	public void setBookedDate(Date bookedDate) {
-		this.bookedDate = bookedDate;
-	}
-	public String getTicketNo() {
+	public Integer getTicketNo() {
 		return ticketNo;
 	}
-	public void setTicketNo(String ticketNo) {
+	public void setTicketNo(Integer ticketNo) {
 		this.ticketNo = ticketNo;
 	}
-	public Charger getBookedCharger() {
-		return bookedCharger;
+	public Machine getBookedMachine() {
+		return bookedMachine;
 	}
-	public void setBookedCharger(Charger bookedCharger) {
-		this.bookedCharger = bookedCharger;
+	public void setBookedMachine(Machine bookedMachine) {
+		this.bookedMachine = bookedMachine;
 	}
 	public Employee getBookingByEmployee() {
 		return bookingByEmployee;
@@ -74,26 +58,36 @@ public class Booking {
 	public void setBookingByEmployee(Employee bookingByEmployee) {
 		this.bookingByEmployee = bookingByEmployee;
 	}
-	public String getBookedTiming() {
-		return bookedTiming;
+	public Date getBookedDate() {
+		return bookedDate;
 	}
-	public void setBookedTiming(String bookedTiming) {
-		this.bookedTiming = bookedTiming;
+	public void setBookedDate(Date bookedDate) {
+		this.bookedDate = bookedDate;
 	}
-	public SlotDuration getBookedForMins() {
-		return bookedForMins;
+	public LocalTime getBookingStartTime() {
+		return bookingStartTime;
 	}
-	public void setBookedForMins(SlotDuration bookedForMins) {
-		this.bookedForMins = bookedForMins;
+	public void setBookingStartTime(LocalTime bookingStartTime) {
+		this.bookingStartTime = bookingStartTime;
+	}
+	public LocalTime getBookingEndTime() {
+		return bookingEndTime;
+	}
+	public void setBookingEndTime(LocalTime bookingEndTime) {
+		this.bookingEndTime = bookingEndTime;
+	}
+	public BookingStatus getStatus() {
+		return status;
+	}
+	public void setStatus(BookingStatus status) {
+		this.status = status;
 	}
 	@Override
 	public String toString() {
-		return "Booking [ticketNo=" + ticketNo + ", bookedCharger=" + bookedCharger + ", bookingByEmployee="
-				+ bookingByEmployee + ", bookedTiming=" + bookedTiming + ", bookedDate=" + bookedDate
-				+ ", bookedForMins=" + bookedForMins + "]";
+		return "Booking [ticketNo=" + ticketNo + ", bookedMachine=" + bookedMachine + ", bookingByEmployee="
+				+ bookingByEmployee + ", bookedDate=" + bookedDate + ", bookingStartTime=" + bookingStartTime
+				+ ", bookingEndTime=" + bookingEndTime + ", status=" + status + "]";
 	}
 	
-	
-
 	
 }

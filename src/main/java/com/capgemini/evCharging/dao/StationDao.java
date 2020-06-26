@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.capgemini.evCharging.bean.Station;
 
 @Repository
-public interface StationDao extends JpaRepository<Station, String>{
+public interface StationDao extends JpaRepository<Station, Integer>{
 
 	
 }
