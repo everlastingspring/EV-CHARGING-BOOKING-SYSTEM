@@ -1,9 +1,10 @@
 package com.capgemini.evCharging.bean;
 
-import java.util.Date;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,11 +13,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
 import com.capgemini.evCharging.bean.enums.BookingStatus;
-import com.capgemini.evCharging.bean.enums.SlotDuration;
 
 import lombok.Data;
 
@@ -40,22 +41,26 @@ public class Booking {
 					@Parameter(name = StringPrefixedSequenceIdGenerator.VALUE_PREFIX_PARAMETER, value = "BO_"),
 
 					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
-	private String ticketNo;
+	private String bookingId;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	private Charger bookedCharger;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Employee bookingByEmployee;
 	
+	
+	@Column(nullable = false)
+	private LocalDate bookedDate;
+
+	@Column(nullable = false)
+	private LocalTime startTime;
+	
+	@Column(nullable = false)
+	private LocalTime endTime;
+	
+	@ColumnDefault(value = "BookingStatus.BOOKED")
 	@Enumerated(EnumType.STRING)
-	private SlotDuration slotDuration;
-	
-	private Date bookedDate;
-	
-	private String bookedTiming; 
-	
-	@Enumerated(EnumType.STRING)
-	private BookingStatus BookingStatus; 
+	private BookingStatus bookingStatus; 
 	
 }

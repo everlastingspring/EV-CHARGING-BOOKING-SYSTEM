@@ -1,7 +1,9 @@
 package com.capgemini.evCharging.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,6 @@ import com.capgemini.evCharging.bean.Employee;
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.ChargerStatus;
 import com.capgemini.evCharging.bean.enums.ChargerType;
-import com.capgemini.evCharging.bean.enums.SlotDuration;
 import com.capgemini.evCharging.dao.BookingDao;
 import com.capgemini.evCharging.dao.ChargerDao;
 import com.capgemini.evCharging.dao.CredentialDao;
@@ -68,14 +69,12 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 		try {
 			Credential credential = new Credential();
-			credential.setMailId(emp.getMailId());
 			byte[] salt = HashAlgorithmService.createSalt();
 			String hashedPassword = HashAlgorithmService.hashedPassword(emp.getPassword(), salt);
 			credential.setPassword(hashedPassword);
 			credential.setSalt(salt);
-			credentialRepo.save(credential);
-
 			employeeRepo.save(emp);
+			credentialRepo.save(credential);
 
 			return true;
 		} catch (Exception exception) {
@@ -117,9 +116,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Charger> getChargersOfStationAndType(String stationId, ChargerType chargerType)
+	public List<Charger> getChargersOfStationAndType(String campus,String city, ChargerType chargerType)
 			throws EvChargingException {
-		List<Charger> chargers = chargerRepo.getChargersOfStationAndType(chargerType, stationId);
+		List<Charger> chargers = chargerRepo.getChargersOfStationAndType(chargerType, campus, city);
 		if (chargers.isEmpty()) {
 			throw new EvChargingException("Charging Station doesn't exist");
 		}
@@ -132,9 +131,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Booking> getChargerDetailListForType(Date forDate, ChargerType selectedChargerType,
+	public List<Booking> searchSlots(LocalDate forDate, ChargerType selectedChargerType,
 			String campus, String city) throws EvChargingException {
-		List<Booking> chargerDetails = bookingRepo.getChargersDetaiListForType(forDate, selectedChargerType,campus,city);
+		List<Booking> chargerDetails = bookingRepo.searchSlots(forDate, selectedChargerType,campus,city);
 
 		if (chargerDetails.isEmpty()) {
 			throw new EvChargingException("Charging Station or Charger Type or selected date doesn't have any data");
@@ -169,24 +168,24 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
  
 	@Override
-	public Booking bookCharger(Date bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException {
+	public Booking bookCharger(LocalDate bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException {
 		
 		
-		Booking booking = getBookingData(bookedDate,bookedTiming,chargerId);
+		Booking booking = getBookingData(bookedDate,bookedTiming);
 		booking.setBookingByEmployee(getEmployeeDetailFromMailId(mailId));
 		bookingRepo.saveAndFlush(booking);
 		return booking; 
 		
 	}
 
-	private Booking getBookingData(Date bookedDate, String bookedTiming, String chargerId) {
-		Booking booking=bookingRepo.getBookingForDateTime(bookedDate,bookedTiming,chargerId);
+	private Booking getBookingData(LocalDate bookedDate, String chargerId) {
+		Booking booking=bookingRepo.getBookingForDateTime(bookedDate,chargerId);
 		return booking;
 }
 
 	@Override
-	public List<Booking> getBookings(String stationId, String mailId) throws EvChargingException {
-		List<Booking> bookings = bookingRepo.getBookingsAtStationByEmployee(stationId, mailId);
+	public List<Booking> getBookingsAtStationByEmployee(String campus, String city,String mailId) throws EvChargingException {
+		List<Booking> bookings = bookingRepo.getBookingsAtStationByEmployee(campus, city, mailId);
 
 		if (bookings.isEmpty()) {
 			throw new EvChargingException("No such booking found");
@@ -207,8 +206,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Booking> getChargerDetailListForSlot(Date forDate, SlotDuration duration, String campus,String city) throws EvChargingException {
-		List<Booking> chargerDetails = bookingRepo.getChargerDetailListForSlot(forDate, duration, campus, city);
+	public List<Booking> getChargerDetailListForSlot(LocalDate forDate, LocalTime duration, String campus,String city) throws EvChargingException {
+		List<Booking> chargerDetails = bookingRepo.getChargerDetailListForSlot(forDate, campus, city);
 		if (chargerDetails.isEmpty()) {
 			throw new EvChargingException("Charger details not found for the selected parameters");
 		}
@@ -216,109 +215,25 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return chargerDetails;
 
 	}
-
-	public void addDetailstoChargerDetails(List<Charger> chargers, int chargerDetailDaysLimit) throws EvChargingException {
-		Date currentDate = new Date();
-
-		for (Charger charger : chargers) {
-
-			int slotDuration = charger.getSlotDuration().getValue();
-
-			for (int day = 0; day < chargerDetailDaysLimit; day++) {
-
-				for (String timing : charger.getChargerActiveTimings()) {
-
-					List<Integer> timeArray = splitStringArrayToMinArray(timing);
-
-					for (int time = timeArray.get(0); time < timeArray.get(1); time += slotDuration) {
-						int hours = time / 60;
-						int remMins = time - (hours * 60);
-
-						ChargerDetailId detailId = new ChargerDetailId();
-						detailId.setCharger(charger);
-						detailId.setDetailForDate(addDaysToDate(currentDate, day));
-						detailId.setDetailFortime(getTimeStringFormat(hours, remMins));
-
-						Optional<ChargerDetail> optionalChargerDetail = chargerDetailRepo.findById(detailId);
-						if (optionalChargerDetail.isPresent()) {
-							throw new EvChargingException("ChargerDetail already exists");
-						}
-
-						ChargerDetail chargerDetail = new ChargerDetail();
-						chargerDetail.setDetailId(detailId);
-						chargerDetail.setChargerDetailStatus(ChargerDetailStatus.FREE);
-						chargerDetail.setBookedByEmployee(null);
-						chargerDetail.setChargerSlotDuration(charger.getSlotDuration());
-						chargerDetailRepo.save(chargerDetail);
-					}
-				}
-
-			}
-		}
-
-	}
-
-	private Date addDaysToDate(Date date, int days) {
-
-		Calendar c = Calendar.getInstance();
-		c.setTime(date);
-
-		c.add(Calendar.DAY_OF_MONTH, days);
-
-		Date currentDatePlusDays = c.getTime();
-		return currentDatePlusDays;
-	}
-
-	public static List<Integer> splitStringArrayToMinArray(String activeTimingsInArray) {
-
-		// convert "10:30-11:00" to [10.5*60, 12*60]
-		List<Integer> timeArray = new ArrayList<Integer>();
-
-		String[] splitActiveTimingArray = activeTimingsInArray.split("-");
-		for (String time : splitActiveTimingArray) {
-
-			String[] splitActiveTimingInStringFormat = time.split(":");
-			Integer activeTimeInMins = Integer.parseInt(splitActiveTimingInStringFormat[0]) * 60
-					+ Integer.parseInt(splitActiveTimingInStringFormat[1]);
-			timeArray.add(activeTimeInMins);
-		}
-		return timeArray;
-	}
-
-	public static Integer getActiveMins(String activeTimingInStringFormat) {
-		Integer mins = 0;
-
-		List<Integer> timeInHours = splitStringArrayToMinArray(activeTimingInStringFormat);
-		mins += (timeInHours.get(1) - timeInHours.get(0));
-		return mins;
-
-	}
-
-	private static String getTimeStringFormat(Integer hours, Integer remMins) {
-		String hourString = hours.toString();
-		String minsString = remMins.toString();
-		hourString = hourString.length() == 1 ? "0".concat(hourString) : hourString;
-
-		minsString = minsString.length() == 1 ? minsString.concat("0") : minsString;
-		return (hourString + ":" + minsString);
-
-	}
-
+	
 	@Override
 	public List<String> getChargersStations() {
 		return chargerRepo.getChargingStations().stream().distinct().collect(Collectors.toList());
 	}
 
 	@Override
-	public List<Charger> addChargers(String campus,String city, List<Charger> chargers) throws EvChargingException {
+	public List<Charger> addChargers(List<Charger> chargers) throws EvChargingException {
 		for (Charger currentCharger : chargers) {
 			try {
-				chargerRepo.save(currentCharger);
+				List<Booking> bookings=createBookings(currentCharger);
+				for (Booking booking : bookings) {
+					bookingRepo.saveAndFlush(booking);
+				}
+				chargerRepo.saveAndFlush(currentCharger);
 			} catch (Exception exception) {
 				throw new EvChargingException(exception.getMessage());
 			}
 		}
-		chargerRepo.flush();
 		return chargerRepo.findAll();
 
 	}
@@ -365,7 +280,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Charger> modifyCharger(String chargerId, SlotDuration newDuration, String[] newChargerActiveTimimgs)
+	public List<Charger> modifyCharger(String chargerId, LocalTime newDuration, String[] newChargerActiveTimimgs)
 			throws EvChargingException {
 		try {
 			Optional<Charger> optionalCharger = chargerRepo.findById(chargerId);
@@ -374,7 +289,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 			}
 			Charger charger = optionalCharger.get();
 			charger.setSlotDuration(newDuration);
-			charger.setChargerActiveTimings(newChargerActiveTimimgs);
 			chargerRepo.save(charger);
 			return chargerRepo.findAll();
 		} catch (Exception exception) {
@@ -402,6 +316,21 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return null;
 	}
 	
-	
+	public static List<Booking> createBookings(Charger charger) {
+		List<Booking> bookings=new ArrayList<Booking>();
+		for(LocalDate startDate=charger.getStartingDate(); startDate.isBefore(startDate.plusDays(10));startDate=startDate.plusDays(1)) {
+			for(LocalTime startTime=charger.getStartTime(); startTime.isBefore(charger.getEndTime());startTime=startTime.plus(charger.getSlotDuration().getHour(),ChronoUnit.HOURS).plus(charger.getSlotDuration().getMinute(), ChronoUnit.MINUTES)) {
+				Booking booking=new Booking();
+				booking.setBookedCharger(charger);
+				booking.setBookedDate(startDate);
+				booking.setBookingStatus(BookingStatus.BOOKED);
+				booking.setStartTime(startTime);
+				booking.setEndTime(startTime.plus(charger.getSlotDuration().getHour(),ChronoUnit.HOURS).plus(charger.getSlotDuration().getMinute(), ChronoUnit.MINUTES));
+				bookings.add(booking);
+			}
+		}
+		return bookings;
+		
+	}
 
 }

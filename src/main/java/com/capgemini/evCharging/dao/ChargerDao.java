@@ -16,12 +16,12 @@ public interface ChargerDao extends JpaRepository<Charger, String>{
 	public List<Charger> getChargersByLevel(@Param("level") String level);
 	
 
-	@Query("select C from Charger C where C.chargerType=:selectedChargerType and C.chargerStation.stationId=:stationId")
-	public List<Charger> getChargersOfStationAndType(@Param("selectedChargerType") ChargerType selectedChargerType,@Param("stationId") String stationId);
+	@Query("select C from Charger C where C.chargerType=:selectedChargerType and C.station.campus=:campus and C.station.city=:city")
+	public List<Charger> getChargersOfStationAndType(@Param("selectedChargerType") ChargerType selectedChargerType,@Param("campus") String campus,@Param("city") String city);
 	
-	@Query("select C from Charger C where C.campus=:campus and C.city=:city")
+	@Query("select C from Charger C where C.station.campus=:campus and C.station.city=:city")
 	public List<Charger> getChargersOfStation(@Param("campus") String campus,@Param("city") String city);
 	
-	@Query("select C.campus and C.city from Charger C")
+	@Query("select C.station.campus , C.station.city from Charger C")
 	public List<String> getChargingStations();
 }

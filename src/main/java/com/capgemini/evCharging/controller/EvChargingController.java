@@ -10,19 +10,16 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Employee;
 import com.capgemini.evCharging.exception.EvChargingException;
 import com.capgemini.evCharging.service.EvChargingService;
 
 
-@CrossOrigin("http://localhost:4200")
+@CrossOrigin(allowCredentials = "true",allowedHeaders = "*")
 @RestController
 public class EvChargingController {
 
@@ -37,19 +34,19 @@ public class EvChargingController {
 	
 	
 	@PostMapping("/register/employee")
-	public Boolean registerEmployee(@RequestBody Employee employee) throws EvChargingException   {
+	public Boolean registerEmployee(@RequestBody Employee employee) throws Exception   {
 		return chargingService.registerEmployee(employee);
 	}
 	
 	
-	@PostMapping("/add/charger/{stationId}")
-	public List<Charger> addNewCharger(@PathVariable("stationID") String  stationId, @RequestBody List<Charger> chargers) throws EvChargingException {
-		return chargingService.addChargers(stationId, chargers);
+	@PostMapping("/add/chargers")
+	public List<Charger> addNewCharger(@RequestBody List<Charger> chargers) throws EvChargingException {
+		return chargingService.addChargers(chargers);
 	}
 	
-	@GetMapping("/login/{email}/{password}")
-	public Boolean loginUser(@PathVariable String email, @PathVariable String password)throws EvChargingException {
-		return chargingService.areCredentialsMatched(email, password);
+	@GetMapping("/login/emp")
+	public Boolean loginUser(@RequestBody Employee employee)throws EvChargingException {
+		return chargingService.areCredentialsMatched(employee.getMailId(),employee.getPassword());
 	}
 	
 	@GetMapping("/chargers/locations")
@@ -60,11 +57,6 @@ public class EvChargingController {
 	@DeleteMapping("/remove/charger/{chargerId}")
 	public List<Charger> removeCharger(@PathVariable String chargerId) throws EvChargingException {
 		return chargingService.removeCharger(chargerId);
-	}
-	
-	@PostMapping("/add/booking")
-	public List<Charger> addBooking(@RequestBody Booking booking) throws EvChargingException {
-		return chargingService.bookCharger(null, null, null, null)
 	}
 	
 }

@@ -1,21 +1,23 @@
 package com.capgemini.evCharging.bean;
 
-import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
 import com.capgemini.evCharging.bean.enums.ChargerStatus;
 import com.capgemini.evCharging.bean.enums.ChargerType;
-import com.capgemini.evCharging.bean.enums.SlotDuration;
-
 import lombok.Data;
 
 @Entity
@@ -39,22 +41,28 @@ public class Charger {
 					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
 	private String chargerId;
 	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ChargerType chargerType;
 	
-	private String[] chargerActiveTimings;
+	@Column(nullable = false)
+	private LocalTime startTime;
 	
+	@Column(nullable = false)
+	private LocalTime endTime;
+	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ChargerStatus chargerStatus; 
 	
-	@Enumerated(EnumType.STRING)
-	private SlotDuration slotDuration; 
+	@Column(nullable = false)
+	private LocalTime slotDuration; 
 	
-	private Date startingDate;
+	@Column(nullable = false)
+	private LocalDate startingDate;
 	
-	private String campus;
-	
-	private String city;
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private station station;
 
 }
 
