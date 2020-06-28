@@ -46,7 +46,7 @@ public class Utility {
 	public Machine getMachineFromMachineId(Integer machineId, MachineDao machineRepo) throws EvChargingException {
 		Optional<Machine> optionalMachine = machineRepo.findById(machineId);
 		if(optionalMachine.isEmpty()) {
-			throw new EvChargingException("Machine with MachineId " +  machineId + "doesn't exist");
+			throw new EvChargingException("Machine with MachineId " +  machineId + " doesn't exist");
 		}
 		return optionalMachine.get();
 	}
@@ -64,7 +64,7 @@ public class Utility {
 
 		Optional<Station> optionalStation = stationRepo.findById(stationId);
 		if(optionalStation.isEmpty()) {
-			throw new EvChargingException("Station with stationId " +  stationId + "doesn't exist");
+			throw new EvChargingException("Station with stationId " +  stationId + " doesn't exist");
 		}
 		return optionalStation.get();
 	}
@@ -72,18 +72,37 @@ public class Utility {
 
 	public MachineDetails populateMachineDetails(MachineDetails machineDetails, List<Machine> machines) {
 
+		//System.out.println(machineDetails.getMachineDetails().keySet());
 		for(Machine machine : machines) {
 
-			LocalTime time = machine.getStartTime();
-
-			for(; time.isBefore(machine.getEndTime());time.plusMinutes(machine.getSlotDuration().getValue())) {
-				MachineDetailKey key = new MachineDetailKey(time,time.plusMinutes(machine.getSlotDuration().getValue()));
-
+			LocalTime startTime = machine.getStartTime();
+	
+			LocalTime endTime = machine.getEndTime();
+			
+			LocalTime endOfTheDayTime = LocalTime.of(23, 59, 59);
+			
+			int slotDuration = machine.getSlotDuration().getValue();
+			int runThrough = (endTime.toSecondOfDay() - startTime.toSecondOfDay()) / (slotDuration * 60) ;
+			if (endOfTheDayTime.equals(endTime)) {
+				runThrough += 1;
+			}
+			
+			for(int i = 0;i < runThrough ;i++) {
+				
+				MachineDetailKey key = new MachineDetailKey(startTime,startTime.plusMinutes(slotDuration),machine.getSlotDuration());
+				startTime = startTime.plusMinutes(slotDuration);
+				
+				System.out.println(startTime.isBefore(endTime) + " " + startTime + " " + endTime);
+				
 				//				if(!detailDictionary.containsKey(key)) {
 				//					detailDictionary.put(key, new ArrayList<MachineDetailValue>());
 				//				}
 				MachineDetailValue valueElement = new MachineDetailValue(machine.getMachineId());
+				
+				System.out.println("Key: " + key +  " contains Key" +  machineDetails.getMachineDetails().containsKey(key));
 				machineDetails.getMachineDetails().get(key).add(valueElement);
+				//System.out.println(machineDetails.getMachineDetails().get(key));
+				
 
 			}
 		}

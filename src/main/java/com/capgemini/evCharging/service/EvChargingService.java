@@ -16,7 +16,7 @@ import com.capgemini.evCharging.exception.EvChargingException;
 public interface EvChargingService {
 	
 	//Registration and login
-	public Boolean areCredentialsMatched(String mailId,String password) throws EvChargingException ; 
+	public Employee areCredentialsMatched(String mailId,String password) throws EvChargingException ; 
 	
 	public Boolean registerEmployee(Employee emp, String password,Boolean isAdmin) throws EvChargingException;
 

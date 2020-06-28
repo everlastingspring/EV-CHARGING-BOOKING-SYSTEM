@@ -1,5 +1,6 @@
 package com.capgemini.evCharging.dao;
 
+import java.sql.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,7 +19,7 @@ public interface MachineDao extends JpaRepository<Machine, Integer>{
 	
 
 	@Query("select M from Machine M where M.machineType=:selectedMachineType and M.machineStation.stationId=:stationId and M.machineStatus=:machineStatus and M.startingDate<=:selectedDate")
-	public List<Machine> getActiveMachinesOfStationAndType(@Param("selectedMachineType") MachineType selectedMachineType,@Param("stationId") Integer stationId,@Param("machineStatus")MachineStatus machineStatus, @Param("selectedDate") String selectedDate);
+	public List<Machine> getActiveMachinesOfStationAndType(@Param("selectedMachineType") MachineType selectedMachineType,@Param("stationId") Integer stationId,@Param("machineStatus")MachineStatus machineStatus, @Param("selectedDate") Date selectedDate);
 	
 	@Query("select M from Machine M where M.machineStation.stationId=:stationId")
 	public List<Machine> getMachinesOfStation(@Param("stationId") Integer stationId);

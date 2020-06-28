@@ -31,14 +31,15 @@ public class Machine implements Serializable{
 
 	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer machineId;
 	
 	
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "admin_seq")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "machine_name_seq")
 
 	@GenericGenerator(
 
-			name = "machine_seq",
+			name = "machine_name_seq",
 
 			strategy = "com.capgemini.evCharging.bean.StringPrefixedSequenceIdGenerator",
 

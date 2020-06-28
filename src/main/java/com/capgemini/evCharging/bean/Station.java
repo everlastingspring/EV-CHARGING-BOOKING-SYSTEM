@@ -4,15 +4,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 
 @Entity
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames={"city","campusLocation"})})
 public class Station {
 	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer stationId;
 	private String city;
 	private String campusLocation;

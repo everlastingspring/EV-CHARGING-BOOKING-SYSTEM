@@ -24,6 +24,7 @@ import com.capgemini.evCharging.bean.enums.SlotDuration;
 public class Booking {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer ticketNo;
 	
 	@ManyToOne(cascade = CascadeType.ALL)

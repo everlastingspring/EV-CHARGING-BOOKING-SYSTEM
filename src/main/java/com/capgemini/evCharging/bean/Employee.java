@@ -20,8 +20,11 @@ import com.sun.istack.NotNull;
 @Entity
 public class Employee {
 	
+	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer employeeId;
+
 
 	@Column(unique = true)
 	private String mailId;
@@ -34,7 +37,7 @@ public class Employee {
 	@Enumerated(EnumType.STRING)
 	private MachineType employeeMachineType;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	private Station employeeStation;
 
 	public Integer getEmployeeId() {
