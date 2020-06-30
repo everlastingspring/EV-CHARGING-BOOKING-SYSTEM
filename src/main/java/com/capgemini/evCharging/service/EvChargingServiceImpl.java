@@ -2,7 +2,7 @@ package com.capgemini.evCharging.service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -67,14 +67,18 @@ public class EvChargingServiceImpl implements EvChargingService {
 	@Override
 	public Boolean registerEmployee(Employee emp) throws EvChargingException {
 
-		try {
+		try {System.out.println(emp);
 			Credential credential = new Credential();
 			byte[] salt = HashAlgorithmService.createSalt();
 			String hashedPassword = HashAlgorithmService.hashedPassword(emp.getPassword(), salt);
+			employeeRepo.saveAndFlush(emp);
+			Employee employee=employeeRepo.getEmployeeFromMailid(emp.getMailId());
+			System.out.println(employee);
+			credential.setEmployeeId(employee.getEmployeeId());
+			credential.setMailId(employee.getMailId());
 			credential.setPassword(hashedPassword);
-			credential.setSalt(salt);
-			employeeRepo.save(emp);
-			credentialRepo.save(credential);
+			credential.setSalt(salt);System.out.println("credential");
+			credentialRepo.saveAndFlush(credential);
 
 			return true;
 		} catch (Exception exception) {
@@ -150,13 +154,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return optionalCharger.get();
 	}
 
-	public Employee getEmployeeDetailFromMailId(String mailId) throws EvChargingException {
-		Optional<Employee> optionalEmployeeObj = employeeRepo.findById(mailId);
-		if (!optionalEmployeeObj.isPresent()) {
-			throw new EvChargingException("Account with" + mailId + " doesn't exist for Employee");
-		}
-		return optionalEmployeeObj.get();
-	}
 
 	public Booking getBookingFromTicketNo(String ticketNo) throws EvChargingException {
 		Optional<Booking> optionalBooking = bookingRepo.findById(ticketNo);
@@ -168,11 +165,12 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
  
 	@Override
-	public Booking bookCharger(LocalDate bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException {
+	public Booking bookCharger(LocalDate bookedDate, LocalTime bookedTiming, String chargerId, String mailId) throws EvChargingException {
 		
 		
-		Booking booking = getBookingData(bookedDate,bookedTiming);
-		booking.setBookingByEmployee(getEmployeeDetailFromMailId(mailId));
+		Booking booking = getBookingData(bookedDate,chargerId);
+		System.out.println(booking + " "  + employeeRepo.getEmployeeFromMailid(mailId) );
+		booking.setBookingByEmployee(employeeRepo.getEmployeeFromMailid(mailId));
 		bookingRepo.saveAndFlush(booking);
 		return booking; 
 		
@@ -224,12 +222,13 @@ public class EvChargingServiceImpl implements EvChargingService {
 	@Override
 	public List<Charger> addChargers(List<Charger> chargers) throws EvChargingException {
 		for (Charger currentCharger : chargers) {
+			chargerRepo.save(currentCharger);
 			try {
 				List<Booking> bookings=createBookings(currentCharger);
 				for (Booking booking : bookings) {
 					bookingRepo.saveAndFlush(booking);
 				}
-				chargerRepo.saveAndFlush(currentCharger);
+				
 			} catch (Exception exception) {
 				throw new EvChargingException(exception.getMessage());
 			}
@@ -318,14 +317,15 @@ public class EvChargingServiceImpl implements EvChargingService {
 	
 	public static List<Booking> createBookings(Charger charger) {
 		List<Booking> bookings=new ArrayList<Booking>();
-		for(LocalDate startDate=charger.getStartingDate(); startDate.isBefore(startDate.plusDays(10));startDate=startDate.plusDays(1)) {
-			for(LocalTime startTime=charger.getStartTime(); startTime.isBefore(charger.getEndTime());startTime=startTime.plus(charger.getSlotDuration().getHour(),ChronoUnit.HOURS).plus(charger.getSlotDuration().getMinute(), ChronoUnit.MINUTES)) {
+		for(LocalDate startDate=charger.getStartingDate(); startDate.isBefore(charger.getStartingDate().plusDays(10));startDate=startDate.plusDays(1)) {
+			for(LocalTime startTime=charger.getStartTime(); startTime.isBefore(charger.getEndTime());startTime=startTime.plusMinutes(charger.getSlotDuration().get(ChronoField.MINUTE_OF_DAY))) {
 				Booking booking=new Booking();
+				System.out.println(startTime);
 				booking.setBookedCharger(charger);
 				booking.setBookedDate(startDate);
 				booking.setBookingStatus(BookingStatus.BOOKED);
 				booking.setStartTime(startTime);
-				booking.setEndTime(startTime.plus(charger.getSlotDuration().getHour(),ChronoUnit.HOURS).plus(charger.getSlotDuration().getMinute(), ChronoUnit.MINUTES));
+				booking.setEndTime(startTime.plusMinutes(charger.getSlotDuration().get(ChronoField.MINUTE_OF_DAY)));
 				bookings.add(booking);
 			}
 		}

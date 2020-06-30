@@ -14,13 +14,14 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 
 import lombok.Data;
-
+@DynamicInsert
 @Entity
 @Data
 public class Booking {
@@ -46,20 +47,19 @@ public class Booking {
 	@ManyToOne
 	private Charger bookedCharger;
 	
-	@ManyToOne(cascade = CascadeType.PERSIST)
+	@ManyToOne
 	private Employee bookingByEmployee;
-	
 	
 	@Column(nullable = false)
 	private LocalDate bookedDate;
 
 	@Column(nullable = false)
-	private LocalTime startTime;
+	private LocalTime startTime;//9:00am
 	
 	@Column(nullable = false)
-	private LocalTime endTime;
+	private LocalTime endTime;//10:30am
 	
-	@ColumnDefault(value = "BookingStatus.BOOKED")
+	@ColumnDefault(value = "'BOOKED'")
 	@Enumerated(EnumType.STRING)
 	private BookingStatus bookingStatus; 
 	

@@ -46,23 +46,23 @@ public class Charger {
 	private ChargerType chargerType;
 	
 	@Column(nullable = false)
-	private LocalTime startTime;
+	private LocalTime startTime;//9:00am
 	
 	@Column(nullable = false)
-	private LocalTime endTime;
+	private LocalTime endTime;//18:00pm
 	
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ChargerStatus chargerStatus; 
 	
 	@Column(nullable = false)
-	private LocalTime slotDuration; 
+	private LocalTime slotDuration; //1:30:00
 	
 	@Column(nullable = false)
-	private LocalDate startingDate;
+	private LocalDate startingDate;//30/06/2020
 	
 	@ManyToOne(cascade = CascadeType.PERSIST)
-	private station station;
+	private Station station;
 
 }
 

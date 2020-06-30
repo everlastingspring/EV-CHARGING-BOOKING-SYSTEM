@@ -1,7 +1,5 @@
 package com.capgemini.evCharging.controller;
 
-
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +29,8 @@ public class EvChargingController {
 			return chargingService.areCredentialsMatched(employee.getMailId(), employee.getPassword());
 	}
 	
-	
-	
 	@PostMapping("/register/employee")
-	public Boolean registerEmployee(@RequestBody Employee employee) throws Exception   {
+	public Boolean registerEmployee(@RequestBody Employee employee) throws EvChargingException   {
 		return chargingService.registerEmployee(employee);
 	}
 	

@@ -16,7 +16,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class station {
+public class Station {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "station_seq")

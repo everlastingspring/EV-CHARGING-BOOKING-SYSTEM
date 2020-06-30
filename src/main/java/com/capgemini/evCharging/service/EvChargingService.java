@@ -9,7 +9,6 @@ import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Employee;
 import com.capgemini.evCharging.bean.enums.ChargerType;
-import com.capgemini.evCharging.bean.enums.SlotDuration;
 import com.capgemini.evCharging.exception.EvChargingException;
 
 public interface EvChargingService {
@@ -17,7 +16,7 @@ public interface EvChargingService {
 	//Authenticate  
 	public Boolean areCredentialsMatched(String mailId,String password) throws EvChargingException ;
 	
-	public Boolean registerEmployee(Employee emp) throws Exception;
+	public Boolean registerEmployee(Employee emp) throws EvChargingException;
 	
 	public Boolean registerAdmin(Employee admin) throws EvChargingException;
 	
@@ -35,7 +34,7 @@ public interface EvChargingService {
 	
 	public List<Booking> searchSlots(LocalDate forDate, ChargerType selectedChargerType,String campus, String city) throws EvChargingException;
 	
-	public Booking bookCharger(LocalDate bookedDate, String bookedTiming, String chargerId, String mailId) throws EvChargingException;
+	public Booking bookCharger(LocalDate bookedDate, LocalTime bookedTiming, String chargerId, String mailId) throws EvChargingException;
 
 	public List<Booking> getBookingsAtStationByEmployee(String campus, String city,String mailId) throws EvChargingException;
 	
