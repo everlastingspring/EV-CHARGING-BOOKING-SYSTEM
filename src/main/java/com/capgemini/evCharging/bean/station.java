@@ -1,6 +1,7 @@
 package com.capgemini.evCharging.bean;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,7 +42,4 @@ public class Station {
 	
 	@Column(nullable = false)
 	private String city;
-	
-	@OneToMany(mappedBy = "station")
-	private List<Charger> chargers;
 }

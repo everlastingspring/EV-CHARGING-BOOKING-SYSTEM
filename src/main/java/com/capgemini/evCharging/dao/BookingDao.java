@@ -1,6 +1,7 @@
 package com.capgemini.evCharging.dao;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,8 +24,8 @@ public interface BookingDao extends JpaRepository<Booking, String> {
 	@Query("select B from Booking B where B.bookedDate=:forDate and B.bookedCharger.station.campus=:campus and B.bookedCharger.station.city=:city")
 	public List<Booking> getChargerDetailListForSlot(@Param("forDate") LocalDate forDate,@Param("campus") String campus,@Param("city") String city);
 	
-	@Query("select B from Booking B where B.bookedDate=:bookedDate and B.bookedCharger.chargerId=:chargerId")
-	public Booking getBookingForDateTime(@Param("bookedDate")LocalDate bookedDate,@Param("chargerId") String chargerId);
+	@Query("select B from Booking B where B.bookedDate=:bookedDate and B.startTime=:startTime and B.bookedCharger.chargerId=:chargerId")
+	public Booking getBookingRowToBook(@Param("bookedDate")LocalDate bookedDate,@Param("startTime") LocalTime startTime,@Param("chargerId") String chargerId);
 
 	
 }

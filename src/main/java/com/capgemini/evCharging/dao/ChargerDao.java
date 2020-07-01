@@ -22,6 +22,4 @@ public interface ChargerDao extends JpaRepository<Charger, String>{
 	@Query("select C from Charger C where C.station.campus=:campus and C.station.city=:city")
 	public List<Charger> getChargersOfStation(@Param("campus") String campus,@Param("city") String city);
 	
-	@Query("select C.station.campus , C.station.city from Charger C")
-	public List<String> getChargingStations();
 }

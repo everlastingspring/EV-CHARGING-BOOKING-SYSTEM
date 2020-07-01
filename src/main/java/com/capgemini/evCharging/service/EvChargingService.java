@@ -8,6 +8,7 @@ import java.util.List;
 import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Employee;
+import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.ChargerType;
 import com.capgemini.evCharging.exception.EvChargingException;
 
@@ -34,7 +35,7 @@ public interface EvChargingService {
 	
 	public List<Booking> searchSlots(LocalDate forDate, ChargerType selectedChargerType,String campus, String city) throws EvChargingException;
 	
-	public Booking bookCharger(LocalDate bookedDate, LocalTime bookedTiming, String chargerId, String mailId) throws EvChargingException;
+	public Booking bookCharger(LocalDate bookedDate, LocalTime startTime, String chargerId, String employeeId) throws EvChargingException;
 
 	public List<Booking> getBookingsAtStationByEmployee(String campus, String city,String mailId) throws EvChargingException;
 	
@@ -61,6 +62,6 @@ public interface EvChargingService {
 	
 	public List<Booking> getBookingsDetail(String chargerId,Date fromDate, Date toDate);
 
-	public List<String> getChargersStations();
+	public List<Station> getChargersStations();
 		
 }

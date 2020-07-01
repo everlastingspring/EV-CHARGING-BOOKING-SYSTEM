@@ -16,6 +16,7 @@ import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Credential;
 import com.capgemini.evCharging.bean.Employee;
+import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.ChargerStatus;
 import com.capgemini.evCharging.bean.enums.ChargerType;
@@ -23,6 +24,7 @@ import com.capgemini.evCharging.dao.BookingDao;
 import com.capgemini.evCharging.dao.ChargerDao;
 import com.capgemini.evCharging.dao.CredentialDao;
 import com.capgemini.evCharging.dao.EmployeeDao;
+import com.capgemini.evCharging.dao.StationDao;
 import com.capgemini.evCharging.exception.EvChargingException;
 
 @Service
@@ -39,12 +41,15 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 	@Autowired
 	EmployeeDao employeeRepo;
+	
+	@Autowired
+	StationDao stationDao;
 
 	@Override
 	public Boolean areCredentialsMatched(String mailId, String password) throws EvChargingException {
 
 		try {
-			Optional<Credential> optionalCredential = credentialRepo.findById(mailId);
+			Optional<Credential> optionalCredential = credentialRepo.getAccountFromMailId(mailId);
 			if (optionalCredential.isPresent()) {
 				Credential credential = optionalCredential.get();
 				String hashUserPassword = HashAlgorithmService.hashedPassword(password, credential.getSalt());
@@ -67,17 +72,16 @@ public class EvChargingServiceImpl implements EvChargingService {
 	@Override
 	public Boolean registerEmployee(Employee emp) throws EvChargingException {
 
-		try {System.out.println(emp);
+		try {
 			Credential credential = new Credential();
 			byte[] salt = HashAlgorithmService.createSalt();
 			String hashedPassword = HashAlgorithmService.hashedPassword(emp.getPassword(), salt);
 			employeeRepo.saveAndFlush(emp);
 			Employee employee=employeeRepo.getEmployeeFromMailid(emp.getMailId());
-			System.out.println(employee);
 			credential.setEmployeeId(employee.getEmployeeId());
 			credential.setMailId(employee.getMailId());
 			credential.setPassword(hashedPassword);
-			credential.setSalt(salt);System.out.println("credential");
+			credential.setSalt(salt);
 			credentialRepo.saveAndFlush(credential);
 
 			return true;
@@ -89,17 +93,19 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public Boolean registerAdmin(Employee admin) throws EvChargingException {
+	public Boolean registerAdmin(Employee emp) throws EvChargingException {
 		try {
-			Credential credential = new Credential();
-			credential.setMailId(admin.getMailId());
-			byte[] salt = HashAlgorithmService.createSalt();
-			String hashedPassword = HashAlgorithmService.hashedPassword(admin.getPassword(), salt);
-			credential.setPassword(hashedPassword);
-			credential.setSalt(salt);
-			credential.setIsAdmin(true);
-			credentialRepo.save(credential);
-			employeeRepo.save(admin);
+		Credential credential = new Credential();
+		byte[] salt = HashAlgorithmService.createSalt();
+		String hashedPassword = HashAlgorithmService.hashedPassword(emp.getPassword(), salt);
+		employeeRepo.saveAndFlush(emp);
+		Employee employee=employeeRepo.getEmployeeFromMailid(emp.getMailId());
+		credential.setEmployeeId(employee.getEmployeeId());
+		credential.setMailId(employee.getMailId());
+		credential.setIsAdmin(true);
+		credential.setPassword(hashedPassword);
+		credential.setSalt(salt);
+		credentialRepo.saveAndFlush(credential);
 
 			return true;
 
@@ -165,21 +171,16 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
  
 	@Override
-	public Booking bookCharger(LocalDate bookedDate, LocalTime bookedTiming, String chargerId, String mailId) throws EvChargingException {
+	public Booking bookCharger(LocalDate bookedDate, LocalTime startTime, String chargerId, String employeeId) throws EvChargingException {
 		
 		
-		Booking booking = getBookingData(bookedDate,chargerId);
-		System.out.println(booking + " "  + employeeRepo.getEmployeeFromMailid(mailId) );
-		booking.setBookingByEmployee(employeeRepo.getEmployeeFromMailid(mailId));
+		Booking booking = bookingRepo.getBookingRowToBook(bookedDate, startTime, chargerId);
+		booking.setBookingByEmployee(employeeRepo.findById(employeeId).get());
+		booking.setBookingStatus(BookingStatus.BOOKED);
 		bookingRepo.saveAndFlush(booking);
 		return booking; 
 		
 	}
-
-	private Booking getBookingData(LocalDate bookedDate, String chargerId) {
-		Booking booking=bookingRepo.getBookingForDateTime(bookedDate,chargerId);
-		return booking;
-}
 
 	@Override
 	public List<Booking> getBookingsAtStationByEmployee(String campus, String city,String mailId) throws EvChargingException {
@@ -215,24 +216,34 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 	
 	@Override
-	public List<String> getChargersStations() {
-		return chargerRepo.getChargingStations().stream().distinct().collect(Collectors.toList());
+	public List<Station> getChargersStations() {
+		return stationDao.getChargingStations();
 	}
 
 	@Override
 	public List<Charger> addChargers(List<Charger> chargers) throws EvChargingException {
 		for (Charger currentCharger : chargers) {
-			chargerRepo.save(currentCharger);
+			Optional<Station> station=stationDao.checkIfStationExists(currentCharger.getStation().getCity(), currentCharger.getStation().getCampus());
+			if(station.isPresent()) {
+				currentCharger.setStation(station.get());
+				chargerRepo.save(currentCharger);
+			}else {
+				stationDao.save(currentCharger.getStation());
+				chargerRepo.save(currentCharger);
+			}
+			
 			try {
 				List<Booking> bookings=createBookings(currentCharger);
 				for (Booking booking : bookings) {
 					bookingRepo.saveAndFlush(booking);
 				}
+				chargerRepo.flush();
 				
 			} catch (Exception exception) {
 				throw new EvChargingException(exception.getMessage());
 			}
 		}
+		
 		return chargerRepo.findAll();
 
 	}
@@ -323,7 +334,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 				System.out.println(startTime);
 				booking.setBookedCharger(charger);
 				booking.setBookedDate(startDate);
-				booking.setBookingStatus(BookingStatus.BOOKED);
+				booking.setBookingStatus(BookingStatus.AVAILABLE);
+				booking.setSlotDuration(charger.getSlotDuration());
 				booking.setStartTime(startTime);
 				booking.setEndTime(startTime.plusMinutes(charger.getSlotDuration().get(ChronoField.MINUTE_OF_DAY)));
 				bookings.add(booking);

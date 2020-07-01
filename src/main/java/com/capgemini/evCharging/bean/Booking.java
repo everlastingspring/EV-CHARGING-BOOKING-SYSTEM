@@ -59,6 +59,9 @@ public class Booking {
 	@Column(nullable = false)
 	private LocalTime endTime;//10:30am
 	
+	@Column(nullable = false)
+	private LocalTime slotDuration;
+	
 	@ColumnDefault(value = "'BOOKED'")
 	@Enumerated(EnumType.STRING)
 	private BookingStatus bookingStatus; 
