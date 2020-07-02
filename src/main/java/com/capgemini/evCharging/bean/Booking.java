@@ -27,7 +27,7 @@ public class Booking {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer ticketNo;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Machine bookedMachine;
 	
 	@ManyToOne(cascade = CascadeType.ALL)

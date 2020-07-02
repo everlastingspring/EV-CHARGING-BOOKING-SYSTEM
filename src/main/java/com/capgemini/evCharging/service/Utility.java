@@ -89,7 +89,7 @@ public class Utility {
 			
 			for(int i = 0;i < runThrough ;i++) {
 				
-				MachineDetailKey key = new MachineDetailKey(startTime,startTime.plusMinutes(slotDuration),machine.getSlotDuration());
+				MachineDetailKey key = new MachineDetailKey(startTime,startTime.plusMinutes(slotDuration),machine.getSlotDuration(),machine.getMachineType());
 				startTime = startTime.plusMinutes(slotDuration);
 				
 				System.out.println(startTime.isBefore(endTime) + " " + startTime + " " + endTime);

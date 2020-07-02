@@ -58,7 +58,7 @@ public class Machine implements Serializable{
 	@Enumerated(EnumType.STRING)
 	private MachineStatus machineStatus; 
 	
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Station machineStation;
 	
 	@Enumerated(EnumType.STRING)

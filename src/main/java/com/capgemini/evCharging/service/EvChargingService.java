@@ -3,11 +3,13 @@ package com.capgemini.evCharging.service;
 import java.time.LocalTime;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Employee;
 import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.MachineDetails;
+import com.capgemini.evCharging.bean.ReportFormat;
 import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
@@ -57,7 +59,7 @@ public interface EvChargingService {
 	
 	public Machine modifyMachine(Machine modifiedMachine) throws EvChargingException;
 	
-	public List<Booking> generateBookingsReport(Integer stationId,Date fromDate, Date toDate);
+	public List<ReportFormat> generateBookingsReport(Integer stationId,Date fromDate, Date toDate);
 	
 	public List<Booking> generateMachineBookingsReport(Integer machineId,Date fromDate, Date toDate);
 	

@@ -5,6 +5,7 @@ package com.capgemini.evCharging.controller;
 import java.time.LocalTime;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.MachineDetails;
+import com.capgemini.evCharging.bean.ReportFormat;
 import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
@@ -88,7 +90,7 @@ public class EvChargingController {
 		return chargingService.cancelBooking(ticketNo);
 	}
 	
-	//To be
+	
 	@PutMapping("/rescheduleBooking/{rescheduleTicketNo}/{rescheduledBookedDate}/{rescheduledBookingStartTiming}/{machineId}/{employeeId}")
 	public List<Booking> rescheduleBooking(@PathVariable Integer rescheduleTicketNo,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date rescheduledBookedDate,@PathVariable @DateTimeFormat(pattern = "HH:mm:ss") LocalTime rescheduledBookingStartTiming,@PathVariable Integer machineId,@PathVariable Integer employeeId) throws EvChargingException {
 		
@@ -109,43 +111,43 @@ public class EvChargingController {
 		return chargingService.addMachines(stationId, machines);
 	}
 	
-	//To be
+
 	@DeleteMapping("/remove/machine/{machineId}")
 	public List<Machine> removeMachine(@PathVariable Integer machineId) throws EvChargingException {
 		return chargingService.removeMachine(machineId);
 	}
 	
-	//To be
+	
 	@PutMapping("/haltMachine/{machineId}/{newStartDate}")
 	public Machine haltMachine(@PathVariable Integer machineId,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date newStartDate) throws EvChargingException {
 		return chargingService.haltMachine(machineId, new Date(newStartDate.getTime()));
 	}
 	
-	//To be
+	
 	@PutMapping("/haltMachine/normalMaintenance/{machineId}/{newStartDate}/{newStartTime}/{newEndTime}") 
 	public Machine haltMachine(@PathVariable Integer machineId,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date newStartDate,@PathVariable @DateTimeFormat(pattern = "HH:mm:ss") LocalTime newStartTime,@PathVariable @DateTimeFormat(pattern = "HH:mm:ss") LocalTime newEndTime) throws EvChargingException{
 		return chargingService.haltMachine(machineId, new Date(newStartDate.getTime()), newStartTime, newEndTime);
 	}
 	
-	//To be
+	
 	@PutMapping("/resumeMachine/{machineId}")
 	public Machine resumeMachine(@PathVariable Integer machineId) throws EvChargingException {
 		return chargingService.resumeMachine(machineId);
 	}
 	
-	//To be
+	
 	@PutMapping("/modifyMachine")
 	public Machine modifyMachine(@RequestBody Machine modifiedMachine) throws EvChargingException {
 		return chargingService.modifyMachine(modifiedMachine);
 	}
 	
-	//To be
+	
 	@GetMapping("/generateReport/{fromDate}/{toDate}/{stationId}")
-	public List<Booking> generateBookingsReport(@PathVariable  @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date fromDate,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date toDate,@PathVariable Integer stationId) {
+	public List<ReportFormat> generateBookingsReport(@PathVariable  @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date fromDate,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date toDate,@PathVariable Integer stationId) {
 		return chargingService.generateBookingsReport(stationId,new Date(fromDate.getTime()), new Date(toDate.getTime()));
 	}
 	
-	//To be
+	
 	@GetMapping("/generateReport/machine/{fromDate}/{toDate}/{machineId}")
 	public List<Booking> generateMachineBookingsReport(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date fromDate,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") java.util.Date toDate,@PathVariable Integer machineId) {
 		return chargingService.generateMachineBookingsReport(machineId, new Date(fromDate.getTime()), new Date(toDate.getTime()));

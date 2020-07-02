@@ -4,9 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.MachineDetailKey;
 import com.capgemini.evCharging.bean.MachineDetailValue;
 import com.capgemini.evCharging.bean.MachineDetails;
+import com.capgemini.evCharging.bean.ReportFormat;
 import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.MachineDetailStatus;
@@ -120,8 +123,18 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return stationRepo.findAll();
 	}
 
+	public LocalTime getNearestAvailableStartTime(Date selectedDate, LocalTime currentTime, LocalTime startTime, SlotDuration slotDuration) {
+		Date currentDate = new Date(System.currentTimeMillis());
+		if(selectedDate.after(currentDate)) {
+			return startTime;
+		} 
+		while(!startTime.isAfter(currentTime)) {
+			startTime = startTime.plusMinutes(slotDuration.getValue());
+		}
+		return startTime;
+	}
 
-	public Integer getPossibleNumberOfBookings(MachineType selectedMachineType, Integer stationId,Date selectedDate) {
+	public Integer getPossibleNumberOfBookings(MachineType selectedMachineType, Integer stationId,Date selectedDate,LocalTime currentTime) {
 		
 		List<Machine> machines = getActiveMachinesOfTypeAndStation(selectedMachineType, stationId, selectedDate);
 		
@@ -132,11 +145,16 @@ public class EvChargingServiceImpl implements EvChargingService {
 		Integer possibleBookings = 0;
 		for(Machine machine: machines) {
 			
-			
-			possibleBookings += ((machine.getEndTime().toSecondOfDay()  - machine.getStartTime().toSecondOfDay()) / (machine.getSlotDuration().getValue() * 60));
-			if(endOfTheDayTime.equals(machine.getEndTime())) {
-				possibleBookings ++;
-			}
+			 LocalTime startTime = getNearestAvailableStartTime(selectedDate, currentTime, machine.getStartTime(), machine.getSlotDuration());
+			 
+			 if(!startTime.isAfter(machine.getEndTime())) {
+				
+				 possibleBookings += ((machine.getEndTime().toSecondOfDay()  - startTime.toSecondOfDay()) / (machine.getSlotDuration().getValue() * 60));
+					if(endOfTheDayTime.equals(machine.getEndTime())) {
+						possibleBookings ++;
+					}
+					
+			 }
 			
 		}
 		return possibleBookings;
@@ -150,20 +168,21 @@ public class EvChargingServiceImpl implements EvChargingService {
 		Date sqlFormattedDate = new Date(System.currentTimeMillis());
 		Boolean isFound = false;
 		
-		
+		LocalTime currentTime = LocalTime.now();
 			
 		for(selectedDate = currentDate; !isFound ; selectedDate =  selectedDate.plusDays(1)) {
 			
 			sqlFormattedDate = Date.valueOf(selectedDate);
 //			String quotedDate = "\'" + sqlFormattedDate + "\'";
-			Integer currentBookings =  bookingRepo.getBookingsAtStationOnDateWithType(selectedStationId, sqlFormattedDate, selectedMachineType);
-			Integer possibleBookings = getPossibleNumberOfBookings(selectedMachineType, selectedStationId, sqlFormattedDate);
+			Integer currentBookings =  bookingRepo.getBookingsAtStationOnDateWithType(selectedStationId, sqlFormattedDate, selectedMachineType,currentTime);
+			
+			Integer possibleBookings = getPossibleNumberOfBookings(selectedMachineType, selectedStationId, sqlFormattedDate,currentTime);
 			System.out.println("Current: " + currentBookings + " " + "possibleBookings" + " " + possibleBookings );
 			if(currentBookings < possibleBookings) {
 				isFound = true;
 				
 			} else if(currentBookings > possibleBookings) {
-				throw new EvChargingException("Current Active Bookings " + currentBookings + " at "+ selectedStationId + " station with selected machine type "+ selectedMachineType + " on " + selectedDate + "can't be greater than possible bookings" + possibleBookings);
+				throw new EvChargingException("Current Active Bookings " + currentBookings + " at "+ selectedStationId + " station with selected machine type "+ selectedMachineType + " on " + selectedDate + " can't be greater than possible bookings " + possibleBookings);
 			} 
 			
 			
@@ -203,7 +222,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 		} else {
 			throw new EvChargingException("Booking slot duration is not applicable for " + mins);
 		}
-		MachineDetailKey detailKey = new MachineDetailKey(booking.getBookingStartTime(), booking.getBookingEndTime(),slotDuration);
+		MachineDetailKey detailKey = new MachineDetailKey(booking.getBookingStartTime(), booking.getBookingEndTime(),slotDuration,booking.getBookedMachine().getMachineType());
 		
 		ArrayList<MachineDetailValue> machineDetailValues = machineDetails.getMachineDetails().get(detailKey);
 		
@@ -221,11 +240,22 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 
+	public void getMachinesWhichCanResume() throws EvChargingException {
+		
+		Date currentDate = new Date(System.currentTimeMillis());
+		List<Machine> resumeMachines =  machineRepo.getMachinesWhichCanResume(currentDate, MachineStatus.HALTED);
+		for(Machine machine : resumeMachines) {
+			resumeMachine(machine.getMachineId());
+		}
+		
+	}
+	
 	@Override
 	public MachineDetails getMachineBookingDetail(Date selectedDate, MachineType selectedMachineType, Integer stationId) throws EvChargingException {
 
+		getMachinesWhichCanResume();
 		List<Machine> machines =  getActiveMachinesOfTypeAndStation(selectedMachineType,stationId,selectedDate);
-		MachineDetails machineDetails = new MachineDetails();
+		MachineDetails machineDetails = new MachineDetails(selectedMachineType);
 		machineDetails =  Utility.utilityObject.populateMachineDetails(machineDetails,machines);
 
 		for (Machine machine : machines) {
@@ -251,6 +281,14 @@ public class EvChargingServiceImpl implements EvChargingService {
 		
 		Machine bookedMachine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
 		
+		if(bookingStartTiming.isBefore(bookedMachine.getStartTime()) || bookingStartTiming.plusMinutes(bookedMachine.getSlotDuration().getValue()).isAfter(bookedMachine.getEndTime())) {
+			throw new EvChargingException("Machine can't be booked after/ before its available timings " + bookedMachine.getStartTime() + " to " + bookedMachine.getEndTime());
+		}
+		
+		if(bookedMachine.getMachineStatus() == MachineStatus.HALTED) {
+			throw new EvChargingException("Machine with id " + bookedMachine.getMachineId() + " is in halt state");
+		}
+		
 		Optional<Employee> optionalBookedByEmployee = employeeRepo.findById(employeeId);
 		if(optionalBookedByEmployee.isEmpty()) {
 			throw new EvChargingException("Employee with empId " + employeeId + " not present");
@@ -259,6 +297,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 		if(checkedBooking.isPresent() && checkedBooking.get().getStatus() == BookingStatus.BOOKED) {
 			throw new EvChargingException("Machine is already booked by employee with empId " + checkedBooking.get().getBookingByEmployee().getEmployeeId());
 		}
+		
+		
 		
 		Booking booking = new Booking();
 		booking.setBookedMachine(bookedMachine);
@@ -328,10 +368,35 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return bookingRepo.findAll();
 
 	}
+	
+	
+	public List<Machine> getActiveMachinesOfDurationAndStation(SlotDuration selectedSlotDuration, Integer stationId,Date selectedDate) {
+
+//		String quotedDate = "\'" +  selectedDate.toString() + "\'";
+		//select * from machine where machine.machineType = 'Level1' and machine.stationId = stationId and machine.duration = duration and machine.machine_status = 'Active' and machine.staring_date <= currentDate;
+		return machineRepo.getActiveMachinesOfStationAndDuration(selectedSlotDuration, stationId, MachineStatus.ACTIVE, selectedDate);
+
+	}
 
 	@Override
 	public MachineDetails getMachineBookingDetail(Date selectedDate, SlotDuration selectedDuration, Integer stationId) throws EvChargingException {
-		return null;
+		getMachinesWhichCanResume();
+		List<Machine> machines =  getActiveMachinesOfDurationAndStation(selectedDuration,stationId,selectedDate);
+		MachineDetails machineDetails = new MachineDetails(selectedDuration);
+		machineDetails =  Utility.utilityObject.populateMachineDetails(machineDetails,machines);
+
+		for (Machine machine : machines) {
+			List<Booking> bookings = getBookingsOfMachine(machine.getMachineId(), selectedDate);
+
+			for(Booking booking : bookings) {
+
+			
+				machineDetails = updateMachineBookingDetail(booking, machineDetails);
+
+			}
+		}
+
+		return machineDetails;
 	}
 	
 
@@ -340,8 +405,13 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 		Station station = Utility.utilityObject.getStationFromStationId(stationId, stationRepo);
 		//		Machine
+		Date currentDate = new Date(System.currentTimeMillis());
 		for (Machine machine : machines) {
 			machine.setMachineStation(station);
+			
+			if(machine.getStartingDate().after(currentDate) && machine.getMachineStatus() == MachineStatus.ACTIVE) {
+				throw new EvChargingException("Machine with machine " + machine.getMachineName() + " can't have an active state for later than " + currentDate + " date");
+			}
 			machine.setMachineStatus(MachineStatus.ACTIVE);
 			machineRepo.save(machine);
 		}
@@ -356,7 +426,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 	public List<Machine> removeMachine(Integer machineId) throws EvChargingException {
 		
 		if (!machineRepo.existsById(machineId)) {
-			throw new EvChargingException("Machine with " + machineId + "doesn't exist");
+			throw new EvChargingException("Machine with " + machineId + " doesn't exist");
 		}
 		machineRepo.deleteById(machineId);
  		return machineRepo.findAll();
@@ -365,10 +435,11 @@ public class EvChargingServiceImpl implements EvChargingService {
 	@Override
 	public Machine haltMachine(Integer machineId, Date newStartDate) throws EvChargingException {
 		if(!machineRepo.existsById(machineId)) {
-			throw new EvChargingException("Machine with " + machineId + "doesn't exist");
+			throw new EvChargingException("Machine with " + machineId + " doesn't exist");
 		}
 		Machine machine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
 		machine.setStartingDate(newStartDate);
+		machine.setMachineStatus(MachineStatus.HALTED);
 		machineRepo.save(machine);
 		return machineRepo.findById(machineId).get();
 	}
@@ -377,12 +448,13 @@ public class EvChargingServiceImpl implements EvChargingService {
 	public Machine haltMachine(Integer machineId, Date newStartDate, LocalTime newStartTime, LocalTime newEndTime)
 			throws EvChargingException {
 		if(!machineRepo.existsById(machineId)) {
-			throw new EvChargingException("Machine with " + machineId + "doesn't exist");
+			throw new EvChargingException("Machine with " + machineId + " doesn't exist");
 		}
 		Machine machine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
 		machine.setStartingDate(newStartDate);
 		machine.setStartTime(newStartTime);
 		machine.setEndTime(newEndTime);
+		machine.setMachineStatus(MachineStatus.HALTED);
 		machineRepo.save(machine);
 		return machineRepo.findById(machineId).get();
 	}
@@ -392,9 +464,10 @@ public class EvChargingServiceImpl implements EvChargingService {
 	public Machine resumeMachine(Integer machineId) throws EvChargingException {
 		Machine machine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
 		if (machine.getMachineStatus() == MachineStatus.ACTIVE) {
-			throw new EvChargingException("Machine with " + machineId  + "is already in active state");
+			throw new EvChargingException("Machine with " + machineId  + " is already in active state");
 		}
 		machine.setMachineStatus(MachineStatus.ACTIVE);
+		machine.setStartingDate(new Date(System.currentTimeMillis()));
 		machineRepo.save(machine);
 		return machineRepo.findById(machineId).get();
 	}
@@ -405,21 +478,28 @@ public class EvChargingServiceImpl implements EvChargingService {
 		if(!machineRepo.existsById(modifiedMachine.getMachineId())) {
 			throw new EvChargingException("Machine with " + modifiedMachine.getMachineId() + " doesn't exist");
 		}
-		machineRepo.save(modifiedMachine);
+		Machine toBeModifyMachine = Utility.utilityObject.getMachineFromMachineId(modifiedMachine.getMachineId(), machineRepo);
+		addMachines(toBeModifyMachine.getMachineStation().getStationId(),new ArrayList<Machine>(Arrays.asList(modifiedMachine)));
 		return Utility.utilityObject.getMachineFromMachineId(modifiedMachine.getMachineId(), machineRepo);
 	}
 
 	@Override
-	public List<Booking> generateBookingsReport(Integer stationId,Date fromDate, Date toDate) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<ReportFormat> generateBookingsReport(Integer stationId,Date fromDate, Date toDate) {
+		List<Map<String,Object>> reportList =  bookingRepo.generateBookingsReportByJoin(fromDate, toDate, stationId);
+		List<ReportFormat> reports = new ArrayList<ReportFormat>();
+		for(Map<String,Object> _report : reportList) {
+			ReportFormat report = new ReportFormat();
+			report.setBookingsCount( (Long)_report.get("bookedMachineCount") );
+			report.setBookedMachine( (Machine)_report.get("bookedMachine"));
+			reports.add(report);
+		}
+		return reports;
 	}
 
 	@Override
 	public List<Booking> generateMachineBookingsReport(Integer machineId,Date fromDate, Date toDate) {
-		
-		// TODO Auto-generated method stub
-		return null;
+		List<Booking> bookings = bookingRepo.getBookingsOfMachine(machineId, fromDate, toDate);
+		return bookings;
 	}
 
 	
