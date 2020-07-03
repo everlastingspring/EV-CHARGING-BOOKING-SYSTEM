@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.time.LocalTime;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -22,6 +23,15 @@ import com.capgemini.evCharging.bean.enums.SlotDuration;
 
 
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
+
+//This class stores the Charger/Machine related information
 @Entity
 public class Machine implements Serializable{
 	
@@ -34,39 +44,31 @@ public class Machine implements Serializable{
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer machineId;
 	
-	
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "machine_name_seq")
-
-	@GenericGenerator(
-
-			name = "machine_name_seq",
-
-			strategy = "com.capgemini.evCharging.bean.StringPrefixedSequenceIdGenerator",
-
-			parameters = {
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.INCREMENT_PARAM, value = "1"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.VALUE_PREFIX_PARAMETER, value = "M"),
-
-					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
+	@Column(unique = true)
 	private String machineName;
 	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private MachineType machineType;
 	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private MachineStatus machineStatus; 
 	
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Station machineStation;
 	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private SlotDuration slotDuration; 
 	
+	@Column(nullable = false)
 	private Date startingDate;
 	
+	@Column(nullable = false)
 	private LocalTime startTime;
+	
+	@Column(nullable = false)
 	private LocalTime endTime;
 	
 	public Integer getMachineId() {

@@ -1,5 +1,6 @@
 package com.capgemini.evCharging.bean;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -7,7 +8,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 
+//This class stores the machine / charger stations info, A station is having one or more number if chargers / machines.
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames={"city","campusLocation"})})
 public class Station {
@@ -15,7 +23,11 @@ public class Station {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer stationId;
+	
+	@Column(nullable = false)
 	private String city;
+	
+	@Column(nullable = false)
 	private String campusLocation;
 	
 	

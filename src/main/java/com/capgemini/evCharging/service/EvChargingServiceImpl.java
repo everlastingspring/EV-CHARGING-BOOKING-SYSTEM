@@ -6,7 +6,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.sql.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,10 +33,16 @@ import com.capgemini.evCharging.dao.EmployeeDao;
 import com.capgemini.evCharging.dao.MachineDao;
 import com.capgemini.evCharging.dao.StationDao;
 import com.capgemini.evCharging.exception.EvChargingException;
+import com.capgemini.evCharging.util.Utility;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 @Service
 public class EvChargingServiceImpl implements EvChargingService {
-
 
 
 	@Autowired
@@ -45,7 +50,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 	@Autowired
 	CredentialDao credentialRepo;
-
 
 	@Autowired
 	StationDao stationRepo;
@@ -57,6 +61,10 @@ public class EvChargingServiceImpl implements EvChargingService {
 	BookingDao bookingRepo;
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#areCredentialsMatched(java.lang.String, java.lang.String)
+	 */
+	
 	@Override
 	public Employee areCredentialsMatched(String mailId, String password) throws EvChargingException {
 
@@ -82,8 +90,12 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 	}
 
+
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#registerEmployee(com.capgemini.evCharging.bean.Employee, java.lang.String, java.lang.Boolean)
+	 */
 	@Override
-	public Boolean registerEmployee(Employee emp, String password, Boolean isAdmin) throws EvChargingException {
+	public Employee registerEmployee(Employee emp, String password, Boolean isAdmin) throws EvChargingException {
 
 		try {
 			Optional<Station> optionalStation = stationRepo.checkIfStationExists(emp.getEmployeeStation().getCity(), emp.getEmployeeStation().getCampusLocation()) ;
@@ -106,9 +118,7 @@ public class EvChargingServiceImpl implements EvChargingService {
 			
 			credentialRepo.save(credential);
 
-			
-
-			return true;
+			return employee;
 		} catch (Exception exception) {
 
 			throw new EvChargingException(exception.getMessage());
@@ -118,11 +128,21 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getStations()
+	 */
 	@Override
 	public List<Station> getStations() {
 		return stationRepo.findAll();
 	}
 
+	/**
+	 * @param selectedDate
+	 * @param currentTime
+	 * @param startTime
+	 * @param slotDuration
+	 * @return
+	 */
 	public LocalTime getNearestAvailableStartTime(Date selectedDate, LocalTime currentTime, LocalTime startTime, SlotDuration slotDuration) {
 		Date currentDate = new Date(System.currentTimeMillis());
 		if(selectedDate.after(currentDate)) {
@@ -134,6 +154,13 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return startTime;
 	}
 
+	/**
+	 * @param selectedMachineType
+	 * @param stationId
+	 * @param selectedDate
+	 * @param currentTime
+	 * @return
+	 */
 	public Integer getPossibleNumberOfBookings(MachineType selectedMachineType, Integer stationId,Date selectedDate,LocalTime currentTime) {
 		
 		List<Machine> machines = getActiveMachinesOfTypeAndStation(selectedMachineType, stationId, selectedDate);
@@ -160,6 +187,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return possibleBookings;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getNextAvailableBookingDate(com.capgemini.evCharging.bean.enums.MachineType, java.lang.Integer)
+	 */
 	@Override
 	public Date getNextAvailableBookingDate(MachineType selectedMachineType, Integer selectedStationId) throws EvChargingException {
 		
@@ -173,7 +203,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 		for(selectedDate = currentDate; !isFound ; selectedDate =  selectedDate.plusDays(1)) {
 			
 			sqlFormattedDate = Date.valueOf(selectedDate);
-//			String quotedDate = "\'" + sqlFormattedDate + "\'";
 			Integer currentBookings =  bookingRepo.getBookingsAtStationOnDateWithType(selectedStationId, sqlFormattedDate, selectedMachineType,currentTime);
 			
 			Integer possibleBookings = getPossibleNumberOfBookings(selectedMachineType, selectedStationId, sqlFormattedDate,currentTime);
@@ -194,21 +223,35 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 
 
+	/**
+	 * @param selectedMachineType
+	 * @param stationId
+	 * @param selectedDate
+	 * @return
+	 */
 	public List<Machine> getActiveMachinesOfTypeAndStation(MachineType selectedMachineType, Integer stationId,Date selectedDate) {
-
-//		String quotedDate = "\'" +  selectedDate.toString() + "\'";
-		//select * from machine where machine.machineType = 'Level1' and machine.stationId = stationId and machine.duration = duration and machine.machine_status = 'Active' and machine.staring_date <= currentDate;
 		return machineRepo.getActiveMachinesOfStationAndType(selectedMachineType, stationId, MachineStatus.ACTIVE, selectedDate);
 
 	}
 
 
+	/**
+	 * @param machineId
+	 * @param selectedDate
+	 * @return
+	 */
 	public List<Booking> getBookingsOfMachine(Integer machineId, Date selectedDate) {
-		//select * from Booking where booking.booked_machine.machineId = machineId and booking.bookedDate = selectedDate and booking.booking_status="Booked";
+		
 		return bookingRepo.getBookingsOfMachine(machineId, selectedDate, BookingStatus.BOOKED);
 	}
 
 
+	/**
+	 * @param booking
+	 * @param machineDetails
+	 * @return
+	 * @throws EvChargingException
+	 */
 	public MachineDetails updateMachineBookingDetail(Booking booking, MachineDetails machineDetails) throws EvChargingException{
 
 		int mins = (booking.getBookingEndTime().toSecondOfDay() - booking.getBookingStartTime().toSecondOfDay()) / 60;
@@ -240,6 +283,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 
+	/**
+	 * @throws EvChargingException
+	 */
 	public void getMachinesWhichCanResume() throws EvChargingException {
 		
 		Date currentDate = new Date(System.currentTimeMillis());
@@ -250,6 +296,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getMachineBookingDetail(java.sql.Date, com.capgemini.evCharging.bean.enums.MachineType, java.lang.Integer)
+	 */
 	@Override
 	public MachineDetails getMachineBookingDetail(Date selectedDate, MachineType selectedMachineType, Integer stationId) throws EvChargingException {
 
@@ -275,6 +324,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#bookMachine(java.sql.Date, java.time.LocalTime, java.lang.Integer, java.lang.Integer)
+	 */
 	@Override
 	public List<Booking> bookMachine(Date bookedDate, LocalTime bookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException {
 
@@ -314,6 +366,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getEmployeeAllBookings(java.lang.Integer)
+	 */
 	@Override
 	public List<Booking> getEmployeeAllBookings(Integer employeeId) throws EvChargingException {
 		List<Booking> bookings = bookingRepo.getAllBookingsByEmployee(employeeId);
@@ -325,6 +380,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return bookings;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getEmployeeCurrentBookings(java.lang.Integer)
+	 */
 	@Override
 	public List<Booking> getEmployeeCurrentBookings(Integer employeeId) throws EvChargingException {
 		
@@ -344,6 +402,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 			
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#rescheduleBooking(java.lang.Integer, java.sql.Date, java.time.LocalTime, java.lang.Integer, java.lang.Integer)
+	 */
 	@Override
 	public List<Booking> rescheduleBooking(Integer ticketNo, Date rescheduledBookedDate, LocalTime rescheduledBookingStartTiming, Integer machineId, Integer employeeId) throws EvChargingException {
 		Booking booking = Utility.utilityObject.getBookingFromTicketNo(ticketNo,bookingRepo);
@@ -357,6 +418,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#cancelBooking(java.lang.Integer)
+	 */
 	@Override
 	public List<Booking> cancelBooking(Integer ticketNo) throws EvChargingException {
 
@@ -370,14 +434,21 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 	
 	
+	/**
+	 * @param selectedSlotDuration
+	 * @param stationId
+	 * @param selectedDate
+	 * @return
+	 */
 	public List<Machine> getActiveMachinesOfDurationAndStation(SlotDuration selectedSlotDuration, Integer stationId,Date selectedDate) {
 
-//		String quotedDate = "\'" +  selectedDate.toString() + "\'";
-		//select * from machine where machine.machineType = 'Level1' and machine.stationId = stationId and machine.duration = duration and machine.machine_status = 'Active' and machine.staring_date <= currentDate;
 		return machineRepo.getActiveMachinesOfStationAndDuration(selectedSlotDuration, stationId, MachineStatus.ACTIVE, selectedDate);
 
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#getMachineBookingDetail(java.sql.Date, com.capgemini.evCharging.bean.enums.SlotDuration, java.lang.Integer)
+	 */
 	@Override
 	public MachineDetails getMachineBookingDetail(Date selectedDate, SlotDuration selectedDuration, Integer stationId) throws EvChargingException {
 		getMachinesWhichCanResume();
@@ -400,11 +471,13 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 	
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#addMachines(java.lang.Integer, java.util.List)
+	 */
 	@Override
 	public List<Machine> addMachines(Integer stationId, List<Machine> machines) throws EvChargingException {
 
 		Station station = Utility.utilityObject.getStationFromStationId(stationId, stationRepo);
-		//		Machine
 		Date currentDate = new Date(System.currentTimeMillis());
 		for (Machine machine : machines) {
 			machine.setMachineStation(station);
@@ -413,6 +486,8 @@ public class EvChargingServiceImpl implements EvChargingService {
 				throw new EvChargingException("Machine with machine " + machine.getMachineName() + " can't have an active state for later than " + currentDate + " date");
 			}
 			machine.setMachineStatus(MachineStatus.ACTIVE);
+			machine =  machineRepo.save(machine);
+			machine.setMachineName("M" +  machine.getMachineId());
 			machineRepo.save(machine);
 		}
 		
@@ -422,16 +497,24 @@ public class EvChargingServiceImpl implements EvChargingService {
 
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#removeMachine(java.lang.Integer)
+	 */
 	@Override
 	public List<Machine> removeMachine(Integer machineId) throws EvChargingException {
 		
 		if (!machineRepo.existsById(machineId)) {
 			throw new EvChargingException("Machine with " + machineId + " doesn't exist");
 		}
-		machineRepo.deleteById(machineId);
+		Machine machine =  Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
+		machine.setMachineStatus(MachineStatus.REMOVED);
+		machineRepo.save(machine);
  		return machineRepo.findAll();
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#haltMachine(java.lang.Integer, java.sql.Date)
+	 */
 	@Override
 	public Machine haltMachine(Integer machineId, Date newStartDate) throws EvChargingException {
 		if(!machineRepo.existsById(machineId)) {
@@ -444,6 +527,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return machineRepo.findById(machineId).get();
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#haltMachine(java.lang.Integer, java.sql.Date, java.time.LocalTime, java.time.LocalTime)
+	 */
 	@Override
 	public Machine haltMachine(Integer machineId, Date newStartDate, LocalTime newStartTime, LocalTime newEndTime)
 			throws EvChargingException {
@@ -460,6 +546,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#resumeMachine(java.lang.Integer)
+	 */
 	@Override
 	public Machine resumeMachine(Integer machineId) throws EvChargingException {
 		Machine machine = Utility.utilityObject.getMachineFromMachineId(machineId, machineRepo);
@@ -472,6 +561,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return machineRepo.findById(machineId).get();
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#modifyMachine(com.capgemini.evCharging.bean.Machine)
+	 */
 	@Override
 	public Machine modifyMachine(Machine modifiedMachine) throws EvChargingException {
 		
@@ -483,6 +575,9 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return Utility.utilityObject.getMachineFromMachineId(modifiedMachine.getMachineId(), machineRepo);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#generateBookingsReport(java.lang.Integer, java.sql.Date, java.sql.Date)
+	 */
 	@Override
 	public List<ReportFormat> generateBookingsReport(Integer stationId,Date fromDate, Date toDate) {
 		List<Map<String,Object>> reportList =  bookingRepo.generateBookingsReportByJoin(fromDate, toDate, stationId);
@@ -496,16 +591,18 @@ public class EvChargingServiceImpl implements EvChargingService {
 		return reports;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#generateMachineBookingsReport(java.lang.Integer, java.sql.Date, java.sql.Date)
+	 */
 	@Override
 	public List<Booking> generateMachineBookingsReport(Integer machineId,Date fromDate, Date toDate) {
 		List<Booking> bookings = bookingRepo.getBookingsOfMachine(machineId, fromDate, toDate);
 		return bookings;
 	}
 
-	
-	
-	
-	//Non UI Methods
+	/* (non-Javadoc)
+	 * @see com.capgemini.evCharging.service.EvChargingService#addStation(java.lang.String, java.lang.String)
+	 */
 	@Override
 	public List<Station> addStation(String city, String campusLocation) {
 		Station newStation = new Station();

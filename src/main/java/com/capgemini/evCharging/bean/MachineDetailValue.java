@@ -1,11 +1,15 @@
 package com.capgemini.evCharging.bean;
 
 import com.capgemini.evCharging.bean.enums.MachineDetailStatus;
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 
 
-
-//Non Entity class
-
+//Non Entity class used for storing the meta information of machines in list for slot wise or level wise fetching of machines.
 public class MachineDetailValue {
 	private Integer machineId;
 	private Integer bookedByEmployeeId;

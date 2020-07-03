@@ -4,6 +4,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
+
+//This service hashes the password using MD5 algorithm
 public class HashAlgorithmService {
 	
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();

@@ -4,23 +4,33 @@ import java.util.Arrays;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
+
+//This stores the password related info for both employee and admin.
 @Entity
 public class Credential {
 	
 	@Id
 	private Integer employeeId;
 	
-	@Column(unique=true)
+	@Column(unique=true, nullable = false)
 	private String mailId;
 	
+	@Column(nullable = false)
 	private String hashedPassword; 
 	
+	@Column(nullable = false)
 	private byte[] saltArray; //hashed with array
 	
+	@Column(nullable = false)
 	private Boolean isAdmin;
 
 	public Integer getEmployeeId() {

@@ -1,5 +1,14 @@
 package com.capgemini.evCharging.bean;
 
+
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
+//Non Entity Class This acts as a wrapper class for retrieving the machine(s) report 
 public class ReportFormat {
 	
 	private Machine bookedMachine;

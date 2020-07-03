@@ -5,8 +5,14 @@ import java.time.LocalTime;
 import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 
-//Non Entity class
+//Non Entity class used for fetching the detail for machines by slot duration or by machine type
 public class MachineDetailKey {
 
 	

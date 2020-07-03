@@ -3,15 +3,18 @@ package com.capgemini.evCharging.bean;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.capgemini.evCharging.bean.enums.MachineDetailStatus;
 import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 
-//Non Entity class
+
+//Non Entity class stores the machine details in key and value fashion.
 public class MachineDetails {
 	private HashMap<MachineDetailKey, ArrayList<MachineDetailValue>> machineDetails = new HashMap<MachineDetailKey, ArrayList<MachineDetailValue>>();
 

@@ -1,9 +1,6 @@
-package com.capgemini.evCharging.service;
+package com.capgemini.evCharging.util;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +19,15 @@ import com.capgemini.evCharging.dao.MachineDao;
 import com.capgemini.evCharging.dao.StationDao;
 import com.capgemini.evCharging.exception.EvChargingException;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
+
+//This is a utility class that adds the utility to the project with some most used procedures across the project
 public class Utility {
 
 

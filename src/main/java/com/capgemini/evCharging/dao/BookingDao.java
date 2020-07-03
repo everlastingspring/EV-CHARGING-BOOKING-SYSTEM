@@ -1,5 +1,13 @@
 package com.capgemini.evCharging.dao;
 
+
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
 import java.sql.Date;
 import java.time.LocalTime;
 import java.util.List;
@@ -16,11 +24,12 @@ import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.MachineType;
 
-
+// This is a repository that directly handles the database layer of Booking entity.
 @Repository
 public interface BookingDao extends JpaRepository<Booking, Integer>{
 	
-	//hql
+	//These queries are in the Hibernate query language (HQL)
+	
 	@Query("select B from Booking B where B.bookingByEmployee.employeeId=:employeeId")
 	public List<Booking> getAllBookingsByEmployee(@Param("employeeId") Integer employeeId);
 	

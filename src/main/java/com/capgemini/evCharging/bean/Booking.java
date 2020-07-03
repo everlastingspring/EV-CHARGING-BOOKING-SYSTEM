@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.sql.Date;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -11,15 +12,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-
 import com.capgemini.evCharging.bean.enums.BookingStatus;
-import com.capgemini.evCharging.bean.enums.SlotDuration;
 
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
 
+// This Entity class stores all the bookings 
 @Entity
 public class Booking {
 
@@ -27,17 +30,24 @@ public class Booking {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer ticketNo;
 	
+	
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Machine bookedMachine;
+	
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Employee bookingByEmployee;
 	
+	@Column(nullable = false)
 	private Date bookedDate; 
 	
+	@Column(nullable = false)
 	private LocalTime bookingStartTime;
+	
+	@Column(nullable = false)
 	private LocalTime bookingEndTime;
 	
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private BookingStatus status;
 	

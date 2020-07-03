@@ -1,5 +1,12 @@
 package com.capgemini.evCharging.dao;
 
+//
+//EvCharging Application
+//
+//Created by The Local host on June 28 2020.
+//Copyright © 2020 Local host. All rights reserved.
+//
+
 import java.sql.Date;
 import java.util.List;
 
@@ -12,9 +19,12 @@ import com.capgemini.evCharging.bean.Machine;
 import com.capgemini.evCharging.bean.enums.MachineStatus;
 import com.capgemini.evCharging.bean.enums.MachineType;
 import com.capgemini.evCharging.bean.enums.SlotDuration;
+
+//This is a repository that directly handles the database layer of Machine entity.
 @Repository
 public interface MachineDao extends JpaRepository<Machine, Integer>{
 	
+	//These queries are in the Hibernate query language (HQL)
 	@Query("select M from Machine M where M.machineType=:level")
 	public List<Machine> getMachinesByLevel(@Param("level") String level);
 	
@@ -32,8 +42,6 @@ public interface MachineDao extends JpaRepository<Machine, Integer>{
 	@Query("select M from Machine M where M.startingDate=:currentDate and M.machineStatus=:machineHaltStatus")
 	public List<Machine> getMachinesWhichCanResume(@Param("currentDate") Date currentDate, @Param("machineHaltStatus") MachineStatus machineHaltStatus);
 	
-	
-	//select * from machine where machine.machineType = 'Level1' and machine.stationId = stationId and machine.duration = duration and machine.machine_status = 'Active' and machine.staring_date <= currentDate;
 	
 	
 }
