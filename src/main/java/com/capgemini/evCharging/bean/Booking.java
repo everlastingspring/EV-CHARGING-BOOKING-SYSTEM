@@ -44,10 +44,10 @@ public class Booking {
 					@Parameter(name = StringPrefixedSequenceIdGenerator.NUMBER_FORMAT_PARAMETER, value = "%05d") })
 	private String bookingId;
 	
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	private Charger bookedCharger;
 	
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	private Employee bookingByEmployee;
 	
 	@Column(nullable = false)

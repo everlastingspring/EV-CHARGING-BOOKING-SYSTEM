@@ -6,6 +6,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Credential;
 import com.capgemini.evCharging.bean.Employee;
+import com.capgemini.evCharging.bean.ReportFormat;
 import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.BookingStatus;
 import com.capgemini.evCharging.bean.enums.ChargerStatus;
@@ -150,25 +152,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 		}
 		return chargerDetails;
 	}
-
-	// Utility functions
-	public Charger getChargerFromChargerId(String chargerId) throws EvChargingException {
-		Optional<Charger> optionalCharger = chargerRepo.findById(chargerId);
-		if (!optionalCharger.isPresent()) {
-			throw new EvChargingException("Charger with chargerId " + chargerId + "doesn't exist");
-		}
-		return optionalCharger.get();
-	}
-
-
-	public Booking getBookingFromTicketNo(String ticketNo) throws EvChargingException {
-		Optional<Booking> optionalBooking = bookingRepo.findById(ticketNo);
-		if (!optionalBooking.isPresent()) {
-			throw new EvChargingException("No such booking with " + ticketNo + " found");
-		}
-
-		return optionalBooking.get();
-	}
  
 	@Override
 	public Booking bookCharger(LocalDate bookedDate, LocalTime startTime, String chargerId, String employeeId) throws EvChargingException {
@@ -194,13 +177,20 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Booking> cancelBooking(String ticketNo) throws EvChargingException {
-
-		Booking booking = getBookingFromTicketNo(ticketNo);
+	public Boolean cancelBooking(String ticketNo) throws EvChargingException {
+		
+		Optional<Booking> optional=bookingRepo.findById(ticketNo);
+		if(optional.isEmpty()) {
+			throw new EvChargingException("booking with id "+ticketNo +" does not exist");
+		}
+		Booking booking =optional.get();
+		if(!booking.getStartTime().isAfter(LocalTime.now().plusHours(3))) {
+			throw new EvChargingException("you can cancel the booking only 3 hours before the bookedtime");
+		}
 		booking.setBookingByEmployee(null);
 		booking.setBookingStatus(BookingStatus.CANCELLED);
 		bookingRepo.saveAndFlush(booking);
-		return bookingRepo.findAll();
+		return true;
 
 	}
 
@@ -249,40 +239,40 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Charger> removeCharger(String chargerId) throws EvChargingException {
+	public Boolean removeCharger(String chargerId) throws EvChargingException {
 		try {
-			if (chargerRepo.findById(chargerId).isEmpty()) {
-				throw new EvChargingException("Charger doesn't exist");
+			Optional<Charger> optional=chargerRepo.findById(chargerId);
+			if (optional.isEmpty() || optional.get().getChargerStatus().equals(ChargerStatus.REMOVED)) {
+				throw new EvChargingException("Charger "+chargerId+" doesn't exist");
 			}
-
-			chargerRepo.deleteById(chargerId);
-			chargerRepo.flush();
-			return chargerRepo.findAll();
+			optional.get().setChargerStatus(ChargerStatus.REMOVED);
+			chargerRepo.save(optional.get());
+			bookingRepo.deleteAll(bookingRepo.getBookingsForCharger(chargerId).stream().
+					filter(charger->charger.getBookedDate().isEqual(LocalDate.now()) || charger.getBookedDate().isAfter(LocalDate.now())).
+					filter(charger->!charger.getBookingStatus().equals(BookingStatus.BOOKED)).collect(Collectors.toList()));
+			return true;
 		} catch (Exception exception) {
 			throw new EvChargingException(exception.getMessage());
 		}
-	}
-
-	public Date handleRemovalDate(String chargerId, Date removalDate) throws EvChargingException {
-		Date currentDate = new Date();
-		int result = currentDate.compareTo(removalDate);
-		if (result == 0) {
-			removeCharger(chargerId);
-		}
-		return currentDate;
 	}
 
 	@Override
 	public Charger resumeCharger(String chargerId) throws EvChargingException {
 		try {
 			Optional<Charger> optionalCharger = chargerRepo.findById(chargerId);
-			if (optionalCharger.isEmpty()) {
-				throw new EvChargingException("Charger doesn't exists");
+			if (optionalCharger.isEmpty() || !optionalCharger.get().getChargerStatus().equals(ChargerStatus.HALTED)) {
+				throw new EvChargingException("charger you selected is either does not exist or not halted");
 			}
 			Charger charger = optionalCharger.get();
-			charger.setChargerStatus(ChargerStatus.ACTIVE);
-			chargerRepo.save(charger);
-			return chargerRepo.findById(chargerId).get();
+			if(charger.getStartingDate().isEqual(LocalDate.now().plusDays(1))) {
+				charger.setChargerStatus(ChargerStatus.ACTIVE);
+				chargerRepo.save(charger);
+				bookingRepo.saveAll(bookingRepo.getBookingsForCharger(chargerId).stream().
+						filter(booking->booking.getBookedDate().isEqual(LocalDate.now().plusDays(1)) || booking.getBookedDate().isAfter(LocalDate.now().plusDays(1))).
+						map(boo->{boo.setBookingStatus(BookingStatus.AVAILABLE);return boo;}).collect(Collectors.toList()));
+			}
+			
+			return charger;
 		} catch (Exception exception) {
 			throw new EvChargingException(exception.getMessage());
 		}
@@ -290,40 +280,51 @@ public class EvChargingServiceImpl implements EvChargingService {
 	}
 
 	@Override
-	public List<Charger> modifyCharger(String chargerId, LocalTime newDuration, String[] newChargerActiveTimimgs)
-			throws EvChargingException {
+	public Charger modifyCharger(Charger charger) throws EvChargingException {
 		try {
-			Optional<Charger> optionalCharger = chargerRepo.findById(chargerId);
-			if (optionalCharger.isEmpty()) {
+			Optional<Charger> optionalCharger = chargerRepo.findById(charger.getChargerId());
+			if (optionalCharger.isEmpty() || !optionalCharger.get().getChargerStatus().equals(ChargerStatus.ACTIVE)) {
 				throw new EvChargingException("Charger doesn't exists");
 			}
-			Charger charger = optionalCharger.get();
-			charger.setSlotDuration(newDuration);
-			chargerRepo.save(charger);
-			return chargerRepo.findAll();
+			Charger charger1 = optionalCharger.get();
+			charger1.setStartTime(charger.getStartTime());
+			charger1.setEndTime(charger.getEndTime());
+			charger1.setSlotDuration(charger.getSlotDuration());
+			charger1.setStartingDate(charger.getStartingDate());
+			chargerRepo.save(charger1);
+			bookingRepo.deleteAll(bookingRepo.getBookingsForCharger(charger1.getChargerId()).stream().
+					filter(charger2->charger2.getBookedDate().isEqual(charger.getStartingDate()) || charger2.getBookedDate().isAfter(charger.getStartingDate())).
+					collect(Collectors.toList()));
+			List<Booking> bookings=createBookings(charger1);
+			for (Booking booking : bookings) {
+				bookingRepo.saveAndFlush(booking);
+			}
+			return charger1;
 		} catch (Exception exception) {
 			throw new EvChargingException(exception.getMessage());
 		}
 	}
 
 	@Override
-	public Charger haltCharger(String chargerId, Date newStartDate) throws EvChargingException {
-		return null;
-	}
-
-	@Override
-	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, String stationId) {
-		return null;
-	}
-
-	@Override
-	public List<Booking> getBookingsDetail(String chargerId, Date fromDate, Date toDate) {
-		return null;
-	}
-
-	@Override
-	public List<Charger> getChargersFromCampusAndCity(String stationId) throws EvChargingException {
-		return null;
+	public Charger haltCharger(String chargerId, LocalDate newStartDate) throws EvChargingException {
+		try {
+			Optional<Charger> optional=chargerRepo.findById(chargerId);
+			if(optional.isEmpty() || optional.get().getChargerStatus().equals(ChargerStatus.REMOVED)) {
+				throw new EvChargingException("no charger with id "+chargerId+" exists");
+			}
+			Charger charger=optional.get();
+			charger.setStartingDate(newStartDate);
+			charger.setChargerStatus(ChargerStatus.HALTED);
+			chargerRepo.save(charger);
+			
+			bookingRepo.saveAll(bookingRepo.getBookingsForCharger(chargerId).stream().
+		filter(booking->booking.getBookedDate().isEqual(LocalDate.now()) || booking.getBookedDate().isAfter(LocalDate.now())).
+		map(boo->{boo.setBookingStatus(BookingStatus.NOT_AVAILABLE);return boo;}).collect(Collectors.toList()));
+			return charger;
+		}
+		catch (Exception exception) {
+			throw new EvChargingException(exception.getMessage());
+		}
 	}
 	
 	public static List<Booking> createBookings(Charger charger) {
@@ -331,7 +332,6 @@ public class EvChargingServiceImpl implements EvChargingService {
 		for(LocalDate startDate=charger.getStartingDate(); startDate.isBefore(charger.getStartingDate().plusDays(10));startDate=startDate.plusDays(1)) {
 			for(LocalTime startTime=charger.getStartTime(); startTime.isBefore(charger.getEndTime());startTime=startTime.plusMinutes(charger.getSlotDuration().get(ChronoField.MINUTE_OF_DAY))) {
 				Booking booking=new Booking();
-				System.out.println(startTime);
 				booking.setBookedCharger(charger);
 				booking.setBookedDate(startDate);
 				booking.setBookingStatus(BookingStatus.AVAILABLE);
@@ -343,6 +343,91 @@ public class EvChargingServiceImpl implements EvChargingService {
 		}
 		return bookings;
 		
+	}
+
+	@Override
+	public Charger haltMachine(String chargerId, LocalDate newStartDate, LocalTime newStartTime, LocalTime newEndTime)
+			throws EvChargingException {
+		if(!chargerRepo.existsById(chargerId)) {
+		throw new EvChargingException("Charger with " + chargerId + " doesn't exist");
+	}
+	Charger charger=chargerRepo.findById(chargerId).get();
+	charger.setStartingDate(newStartDate);
+	charger.setStartTime(newStartTime);
+	charger.setEndTime(newEndTime);
+	charger.setChargerStatus(ChargerStatus.HALTED);
+	bookingRepo.saveAll(bookingRepo.getBookingsForCharger(chargerId).stream().
+			filter(booking->booking.getBookedDate().isEqual(LocalDate.now()) || booking.getBookedDate().isAfter(LocalDate.now())).
+			map(boo->{boo.setBookingStatus(BookingStatus.NOT_AVAILABLE);return boo;}).collect(Collectors.toList()));
+	chargerRepo.save(charger);
+	return charger;
+	}
+
+	@Override
+	public List<Booking> getEmployeeAllBookings(String empId) throws EvChargingException {
+		List<Booking> bookings = bookingRepo.getAllBookingsByEmployee(empId);
+
+		if(bookings.isEmpty()) {
+			throw new EvChargingException("User with id " + empId + " has no booking");
+		}
+
+		return bookings;
+	}
+
+	@Override
+	public List<Booking> getEmployeeCurrentBookings(String empId) throws EvChargingException {
+		return getEmployeeAllBookings(empId).stream().
+		filter(booking->(booking.getBookedDate().isEqual(LocalDate.now()) && booking.getStartTime().isAfter(LocalTime.now())) || booking.getBookedDate().isAfter(LocalDate.now())).
+		collect(Collectors.toList());
+	}
+
+	@Override
+	public List<Booking> rescheduleBooking(String rescheduleTicketNo, LocalDate rescheduledBookedDate,
+			LocalTime rescheduledBookingStartTiming, String chargerId, String employeeId) throws EvChargingException {
+		Booking entity=bookingRepo.findById(rescheduleTicketNo).get();
+		entity.setBookingStatus(BookingStatus.CANCELLED);
+		bookingRepo.save(entity);
+		Booking booking=bookCharger(rescheduledBookedDate, rescheduledBookingStartTiming, chargerId, employeeId);
+		bookingRepo.save(booking);
+		bookingRepo.flush();
+		return getEmployeeAllBookings(employeeId);
+	}
+
+	@Override
+	public List<Booking> getBookingsBySlotDuartion(LocalDate selectedDate, LocalTime selectedSlotDuration,
+			String stationId) throws EvChargingException {
+		return bookingRepo.getBookingsBySlotDuartion(selectedDate,selectedSlotDuration,stationId);
+		 
+	}
+
+	@Override
+	public List<ReportFormat> generateBookingsReport(String stationId, LocalDate fromDate, LocalDate toDate)
+			throws EvChargingException {
+		List<Map<String,Object>> reportList =  bookingRepo.generateBookingsReportByJoin(fromDate, toDate, stationId);
+		List<ReportFormat> reports = new ArrayList<ReportFormat>();
+		for(Map<String,Object> _report : reportList) {
+			ReportFormat report = new ReportFormat();
+			report.setBookingsCount( (Long)_report.get("bookedMachineCount") );
+			report.setBookedMachine( (Charger)_report.get("bookedMachine"));
+			reports.add(report);
+		}
+		return reports;
+	}
+
+	@Override
+	public List<Booking> generateMachineBookingsReport(String machineId, LocalDate fromDate, LocalDate toDate)
+			throws EvChargingException {
+		List<Booking> bookings = bookingRepo.getBookingsOfMachine(machineId, fromDate, toDate);
+		return bookings;
+	}
+
+	@Override
+	public List<Station> addStation(String city, String campusLocation) throws EvChargingException {
+		Station newStation = new Station();
+		newStation.setCity(city);
+		newStation.setCampus(campusLocation);
+		stationDao.save(newStation);
+		return stationDao.findAll();
 	}
 
 }

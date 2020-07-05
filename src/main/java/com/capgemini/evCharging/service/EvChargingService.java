@@ -8,6 +8,7 @@ import java.util.List;
 import com.capgemini.evCharging.bean.Booking;
 import com.capgemini.evCharging.bean.Charger;
 import com.capgemini.evCharging.bean.Employee;
+import com.capgemini.evCharging.bean.ReportFormat;
 import com.capgemini.evCharging.bean.Station;
 import com.capgemini.evCharging.bean.enums.ChargerType;
 import com.capgemini.evCharging.exception.EvChargingException;
@@ -26,8 +27,6 @@ public interface EvChargingService {
 	//User Registration drop down
 	public List<Charger> getChargersOfStation(String campus, String city) throws EvChargingException;
 	
-	public List<Charger> getChargersFromCampusAndCity(String stationId) throws EvChargingException;
-	
 	public List<Charger> getChargersOfStationAndType(String campus, String city, ChargerType chargerType) throws EvChargingException; // more filtered -> Admin Actions
 	
 	//User booking 
@@ -39,7 +38,7 @@ public interface EvChargingService {
 
 	public List<Booking> getBookingsAtStationByEmployee(String campus, String city,String mailId) throws EvChargingException;
 	
-	public List<Booking> cancelBooking(String ticketNo) throws EvChargingException;
+	public Boolean cancelBooking(String ticketNo) throws EvChargingException;
 	
 	
 	//Admin Actions
@@ -50,18 +49,32 @@ public interface EvChargingService {
 	
 	public List<Charger> addChargers(List<Charger> chargers) throws EvChargingException;
 	
-	public List<Charger> removeCharger(String chargerId) throws EvChargingException;
+	public Boolean removeCharger(String chargerId) throws EvChargingException;
 	
-	public Charger haltCharger(String chargerId, Date newStartDate) throws EvChargingException; // for normal maintenance startDate += startDate 
+	public Charger haltCharger(String chargerId, LocalDate newStartDate) throws EvChargingException; // for normal maintenance startDate += startDate 
 	
 	public Charger resumeCharger(String chargerId) throws EvChargingException;
 	
-	public List<Charger> modifyCharger(String chargerId,LocalTime newDuration, String[] newChargerActiveTimimgs) throws EvChargingException;
+	public Charger modifyCharger(Charger charger) throws EvChargingException;
 	
-	public List<Booking> getBookingsByJoin(Date fromDate, Date toDate, String stationId);
-	
-	public List<Booking> getBookingsDetail(String chargerId,Date fromDate, Date toDate);
-
 	public List<Station> getChargersStations();
+
+	public Charger haltMachine(String machineId, LocalDate newStartDate, LocalTime newStartTime, LocalTime newEndTime) throws EvChargingException;
+
+	public List<Booking> getEmployeeAllBookings(String empId) throws EvChargingException;
+
+	public List<Booking> getEmployeeCurrentBookings(String empId) throws EvChargingException;
+
+	public List<Booking> rescheduleBooking(String rescheduleTicketNo, LocalDate rescheduledBookedDate,
+			LocalTime rescheduledBookingStartTiming, String machineId, String employeeId) throws EvChargingException;
+
+	public List<Booking> getBookingsBySlotDuartion(LocalDate selectedDate, LocalTime selectedSlotDuration,
+			String stationId) throws EvChargingException;
+
+	public List<ReportFormat> generateBookingsReport(String stationId, LocalDate fromDate, LocalDate toDate) throws EvChargingException;
+
+	public List<Booking> generateMachineBookingsReport(String machineId, LocalDate fromDate, LocalDate toDate)throws EvChargingException;
+
+	public List<Station> addStation(String city, String campusLocation) throws EvChargingException;
 		
 }

@@ -1,5 +1,5 @@
 package com.capgemini.evCharging.bean.enums;
 
 public enum BookingStatus {
-	AVAILABLE,BOOKED,CANCELLED;
+	AVAILABLE,NOT_AVAILABLE,BOOKED,CANCELLED;
 }
