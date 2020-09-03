@@ -1,12 +1,3 @@
-This is an Electric Vehicle Charging Api Service. To run this project successfully, initialise the following properties in application.properties file:
-
-
-spring.datasource.url = 
-
-spring.datasource.driver-class-name= 
-
-spring.datasource.username= 
-
-spring.datasource.password=
-
-spring.jpa.database-platform= 
+This application is built on JAVA-8, JPA WITH HIBERNATE, MYSQL IN SPRING BOOT.
+THIS IS DEMO PROJECT WHERE
+Employees can book slots for in ELECTRIC VEHICLE CHARGING STATIONS IN A COMPANY.
